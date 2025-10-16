@@ -1,0 +1,8 @@
+{
+  "name": "E3DC RSCP connect",
+  "content_in_root": false,
+  "domains": ["sensor"],
+  "country": "DE",
+  "homeassistant": "2025.10.0",
+  "render_readme": true
+}
