@@ -1,10 +1,10 @@
 {
   "domain": "e3dc_rscp_connect",
   "name": "E3DC RSCP connect",
-  "version": "1.0.0",
-  "documentation": "https://github.com/tobias-terhaar/e3dc_rscp_connect",
   "codeowners": ["@tobias-terhaar"],
-  "iot_class": "local_polling",
   "config_flow": true,
-  "requirements": ["py3rijndael==0.3.3"]
+  "documentation": "https://github.com/tobias-terhaar/e3dc_rscp_connect",
+  "iot_class": "local_polling",
+  "requirements": ["py3rijndael==0.3.3"],
+  "version": "1.0.0"
 }
