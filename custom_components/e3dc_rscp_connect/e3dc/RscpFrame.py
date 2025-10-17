@@ -60,7 +60,9 @@ class RscpFrame:
     def unpack(self, buffer):
         frame_header_size = struct.calcsize(RscpFrame.frame_header_fmt)
         if len(buffer) < frame_header_size:
-            raise ValueError("buffer is to small to calculate header size!")
+            raise ValueError(
+                f"received buffer size ({len(buffer)}) is to small for calculate header size {frame_header_size}!"
+            )
 
         magic, ctrl, time_seconds, time_nanoseconds, data_length = struct.unpack(
             RscpFrame.frame_header_fmt, buffer[0:frame_header_size]

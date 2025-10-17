@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 log.setLevel(6)
 
 
-class RscpConnectionException(BaseException):
+class RscpConnectionException(Exception):
     pass
 
 
@@ -35,6 +35,8 @@ class RscpConnection:
         if self.is_connected():
             log.error("Cannot connect a already connected socket")
             return False
+
+        self.__auth_level = 0
 
         log.debug(f"connecting to device: {self.__host} on port {self.__port}")
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
