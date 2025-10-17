@@ -25,12 +25,15 @@ class RscpClient:
         if not self.client.is_connected():
             await self.client.connect()
         if self.client.is_connected() and not self.client.is_authorized():
-            await self.client.authorize()
+            if not await self.client.authorize():
+                raise ConnectionError(
+                    "Couldn't authorize! Check username and password!"
+                )
 
     async def identify_device(self) -> dict:
         "Reads serial number and firmware version from device."
         try:
-            if not self.client.is_connected():
+            if not self.client.is_connected() or not self.client.is_authorized():
                 _LOGGER.info("Not connected, try to reconnect!")
                 await self._connect_and_login()
 
@@ -84,9 +87,11 @@ class RscpClient:
 
                     _LOGGER.info("%s", value.toString())
                     pass
+        except ConnectionError as err:
+            raise Exception(f"Error: {err}") from err
         except Exception as err:
             # TODO make Exception more specific
-            raise Exception("Error during data fetch: {err}") from err
+            raise Exception(f"Identification failed! Rscp Key correct?") from err
 
         return values
 
