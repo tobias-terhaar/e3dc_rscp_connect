@@ -87,7 +87,7 @@ async def async_setup_entry(
             "WB 0 Assigned Power",
             "wb_0_assigned_power",
             "Wallbox",
-            "0",
+            0,
         ),
         CpStateSensor(coordinator, config_entry, 1),
         PowerSensor(
