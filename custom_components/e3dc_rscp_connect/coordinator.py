@@ -26,11 +26,22 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
     def __init__(self, hass: HomeAssistant, entry) -> None:
         "Initialize the global updater."
 
-        self.host = entry.data["host"]
-        self.port = entry.data["port"]
-        self.username = entry.data["username"]
-        self.password = entry.data["password"]
-        self.key = entry.data["key"]
+        # get configuration data from options or from the initial setup data as fallback
+        current = entry.options or entry.data
+
+        self.host = current["host"]
+        self.port = current["port"]
+        self.username = current["username"]
+        self.password = current["password"]
+        self.key = current["key"]
+        _LOGGER.info(
+            "Host: %s, Port: %d, user: %s, password: %s, key: %s",
+            self.host,
+            self.port,
+            self.username,
+            self.password,
+            self.key,
+        )
 
         self.__last_device_info_update: datetime | None = None
         self.__device_info_interval = timedelta(minutes=5)
@@ -43,11 +54,13 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         self._wb_indexes: list = []
         self._wallbox_data: dict = {}
 
+        __update_interval = current.get("update_interval", 10)
+
         super().__init__(
             hass,
             _LOGGER,
             name="E3DC RSCP connect client",
-            update_interval=timedelta(seconds=10),
+            update_interval=timedelta(seconds=__update_interval),
         )
 
         self.client = RscpClient(
