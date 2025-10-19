@@ -5,6 +5,7 @@ import logging
 from homeassistant.core import HomeAssistant
 
 from . import const
+from .coordinator import E3dcRscpCoordinator
 from .entities import CpStateSensor, EnergySensor, PowerSensor, StateOfChargeSensor
 
 DOMAIN = const.DOMAIN
@@ -16,7 +17,9 @@ async def async_setup_entry(
 ) -> None:
     "Setup the integration using config entry."
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
+    coordinator: E3dcRscpCoordinator = hass.data[DOMAIN][config_entry.entry_id][
+        "coordinator"
+    ]
 
     sensors = [
         PowerSensor(coordinator, config_entry, "Home Power", "home_power"),
@@ -70,35 +73,27 @@ async def async_setup_entry(
         EnergySensor(
             coordinator, config_entry, "Wallbox Sun Charge Energy", "wallbox_pv_power"
         ),
-        PowerSensor(
-            coordinator, config_entry, "PVI 0 MPPT 0 Power", "pvi_0_mppt_0_power"
-        ),
-        PowerSensor(
-            coordinator, config_entry, "PVI 0 MPPT 1 Power", "pvi_0_mppt_1_power"
-        ),
-        PowerSensor(
-            coordinator, config_entry, "PVI 0 MPPT 2 Power", "pvi_0_mppt_2_power"
-        ),
-        # wallboxes
-        CpStateSensor(coordinator, config_entry, 0),
-        PowerSensor(
-            coordinator,
-            config_entry,
-            "WB 0 Assigned Power",
-            "wb_0_assigned_power",
-            "Wallbox",
-            0,
-        ),
-        CpStateSensor(coordinator, config_entry, 1),
-        PowerSensor(
-            coordinator,
-            config_entry,
-            "WB 1 Assigned Power",
-            "wb_1_assigned_power",
-            "Wallbox",
-            1,
-        ),
+        PowerSensor(coordinator, config_entry, "PV String 1", "pvi_0_mppt_0_power"),
+        PowerSensor(coordinator, config_entry, "PV String 2", "pvi_0_mppt_1_power"),
+        PowerSensor(coordinator, config_entry, "PV String 3", "pvi_0_mppt_2_power"),
         StateOfChargeSensor(coordinator, config_entry),
+        *[
+            CpStateSensor(
+                coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
+            )
+            for x in coordinator.wb_indexes
+        ],
+        *[
+            PowerSensor(
+                coordinator,
+                config_entry,
+                "Zugewiesene Leistung",
+                f"wb_{x}_assigned_power",
+                "Wallbox",
+                x,
+            )
+            for x in coordinator.wb_indexes
+        ],
     ]
 
     async_add_entities(sensors)

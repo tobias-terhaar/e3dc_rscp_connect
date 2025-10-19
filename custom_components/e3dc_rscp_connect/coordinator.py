@@ -14,6 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class WallboxIndentData:
+    "Identity data of a connected wallbox."
+
     serial: str
     device_name: str
     firmware_version: str
@@ -105,7 +107,18 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
     def firmware(self) -> str:
         return self._firmware
 
+    @property
+    def wallbox_count(self) -> int:
+        "Returns the number of detected wallboxes!"
+        return len(self._wb_indexes)
+
+    @property
+    def wb_indexes(self) -> list[int]:
+        "Returns a list with the wallbox indexes which have been found."
+        return self._wb_indexes
+
     def get_wallbox_ident(self, index: int) -> WallboxIndentData:
+        "Returns the ident data of a give wallbox."
         return self._wallbox_data[index]
 
     async def _async_update_data(self):
