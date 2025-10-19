@@ -23,7 +23,7 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
 
         self._attr_name = "Ladestatus"
         self._attr_unique_id = (
-            f"{wallbox_ident.device_name.replace(' ', '_')}_charge_state"
+            f"{wallbox_ident.device_name.lower().replace(' ', '_')}_charge_state"
         )
 
     @property
