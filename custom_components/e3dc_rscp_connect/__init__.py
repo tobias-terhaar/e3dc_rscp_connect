@@ -1,6 +1,6 @@
 """e3dc_rscp_connect is a home assistant integration to provide data connector to E3DC storage systems."""
 
-from config.custom_components.e3dc_rscp_connect.e3dc.RscpConnection import (
+from custom_components.e3dc_rscp_connect.e3dc.RscpConnection import (
     RscpConnectionException,
 )
 from homeassistant.config_entries import ConfigEntry
