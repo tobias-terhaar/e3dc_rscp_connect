@@ -108,7 +108,7 @@ class RscpConnection:
             buffer = await loop.sock_recv(self.__clientsock, 4096)
             log.debug(f"received {len(buffer)} bytes of data")
             return buffer
-        except (TimeoutError, BrokenPipeError, ConnectionResetError, OSError):
+        except (TimeoutError, BrokenPipeError, ConnectionResetError, OSError) as e:
             log.error(f"Error while sending data to device {self.__host}: {str(e)}")
             self.disconnect()
             raise RscpConnectionException(
