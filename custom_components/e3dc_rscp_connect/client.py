@@ -42,6 +42,10 @@ class RscpClient:
             requests.append(RscpValue().withTagName("TAG_INFO_REQ_SERIAL_NUMBER", None))
             requests.append(RscpValue().withTagName("TAG_INFO_REQ_MAC_ADDRESS", None))
             requests.append(RscpValue().withTagName("TAG_INFO_REQ_SW_RELEASE", None))
+            requests.append(
+                RscpValue().withTagName("TAG_INFO_REQ_ASSEMBLY_SERIAL_NUMBER", None)
+            )
+
             requests.extend(
                 [
                     RscpValue.construct_rscp_value(
@@ -56,8 +60,10 @@ class RscpClient:
                     for index in range(7)
                 ]
             )
-            received_values = await self.send_and_receive(requests)
 
+            received_values = await self.send_and_receive(requests)
+            for x in received_values:
+                _LOGGER.warning(f"received identification: {x.toString()}")
             #
             # TODO identify number of wallboxes used and create individual devices for it!
             # TODO read serial number and firmware from wallbox and add data to coordinator *and* to device_info
@@ -238,6 +244,9 @@ class RscpClient:
             requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_WB_ALL", None))
             requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_WB_SOLAR", None))
             requests.append(RscpValue().withTagName("TAG_EMS_REQ_BAT_SOC", None))
+            requests.append(
+                RscpValue().withTagName("TAG_EMS_REQ_EMERGENCY_POWER_STATUS", None)
+            )
             requests.append(self.__create_rscp_tags_for_inverter(0))
             requests.append(self.__create_rscp_tags_for_wallbox(0))
             requests.append(self.__create_rscp_tags_for_wallbox(1))
@@ -265,6 +274,8 @@ class RscpClient:
                     result_values.update(self.__extract_pvi_data(value))
                 elif value.getTagName() == "TAG_WB_DATA":
                     result_values.update(self.__extract_wallbox_data(value))
+                elif value.getTagName() == "TAG_EMS_EMERGENCY_POWER_STATUS":
+                    result_values["emergency_power_status"] = value.getValue()
 
                 else:
                     _LOGGER.warning("Received unknown tag: %s", value.getTagName())

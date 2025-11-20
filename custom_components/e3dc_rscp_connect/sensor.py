@@ -6,7 +6,13 @@ from homeassistant.core import HomeAssistant
 
 from . import const
 from .coordinator import E3dcRscpCoordinator
-from .entities import CpStateSensor, EnergySensor, PowerSensor, StateOfChargeSensor
+from .entities import (
+    CpStateSensor,
+    EmergencyPowerSensor,
+    EnergySensor,
+    PowerSensor,
+    StateOfChargeSensor,
+)
 
 DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
@@ -76,6 +82,7 @@ async def async_setup_entry(
         PowerSensor(coordinator, config_entry, "PV String 1", "pvi_0_mppt_0_power"),
         PowerSensor(coordinator, config_entry, "PV String 2", "pvi_0_mppt_1_power"),
         PowerSensor(coordinator, config_entry, "PV String 3", "pvi_0_mppt_2_power"),
+        EmergencyPowerSensor(coordinator, config_entry, "emergency_power_status"),
         StateOfChargeSensor(coordinator, config_entry),
         *[
             CpStateSensor(
