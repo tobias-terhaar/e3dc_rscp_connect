@@ -15,6 +15,8 @@ from .entities import (
     SunModeSensor,
 )
 
+from .entities.test_entity import TestSelect
+
 DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,12 +89,6 @@ async def async_setup_entry(
         StateOfChargeSensor(coordinator, config_entry),
         *[
             CpStateSensor(
-                coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
-            )
-            for x in coordinator.wb_indexes
-        ],
-        *[
-            SunModeSensor(
                 coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
             )
             for x in coordinator.wb_indexes

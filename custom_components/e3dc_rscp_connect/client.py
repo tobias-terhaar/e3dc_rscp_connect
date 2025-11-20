@@ -46,21 +46,6 @@ class RscpClient:
                 RscpValue().withTagName("TAG_INFO_REQ_ASSEMBLY_SERIAL_NUMBER", None)
             )
 
-            requests.extend(
-                [
-                    RscpValue.construct_rscp_value(
-                        "TAG_WB_REQ_DATA",
-                        [
-                            ("TAG_WB_INDEX", index),
-                            ("TAG_WB_REQ_SERIAL", None),
-                            ("TAG_WB_REQ_DEVICE_NAME", None),
-                            ("TAG_WB_REQ_FIRMWARE_VERSION", None),
-                        ],
-                    )
-                    for index in range(7)
-                ]
-            )
-
             received_values = await self.send_and_receive(requests)
             for x in received_values:
                 _LOGGER.warning(f"received identification: {x.toString()}")
@@ -218,6 +203,16 @@ class RscpClient:
         )
 
         return extracted_values
+
+    async def send_set_sun_mode_request(self, index: int, value: bool):
+        """Sends a sun mode set request to the storage."""
+
+        request = RscpValue.construct_rscp_value(
+            "TAG_WB_REQ_DATA",
+            [("TAG_WB_INDEX", index), ("TAG_WB_REQ_SET_SUN_MODE_ACTIVE", value)],
+        )
+        response = await self.send_and_receive(request)
+        _LOGGER.debug(f"{response}")
 
     def __get_value_for_path(self, path, rscp_value: RscpValue):
         "Returns the value for the given path, or None if path not found."

@@ -129,3 +129,7 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         except Exception as err:
             _LOGGER.exception("Exception in update_data:")
             raise UpdateFailed(f"Fehler beim Abrufen: {err}") from err
+
+    async def set_sun_mode(self, wallbox_id: int, value: bool):
+        "Uses the client implementation to change the sun mode."
+        await self.client.send_set_sun_mode_request(wallbox_id, value)
