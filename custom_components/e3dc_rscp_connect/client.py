@@ -213,7 +213,7 @@ class RscpClient:
             extracted_values[f"wb_{wb_index}_power"] = None
 
         value = container.get_child("TAG_WB_SUN_MODE_ACTIVE")
-        extracted_values[f"wb_{wb_index}_sun_mode"] = (
+        extracted_values[f"wb_{wb_index}_sun_mode_state"] = (
             value.getValue() if value is not None else None
         )
 

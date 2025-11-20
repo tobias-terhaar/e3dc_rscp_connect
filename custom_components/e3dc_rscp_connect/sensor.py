@@ -12,6 +12,7 @@ from .entities import (
     EnergySensor,
     PowerSensor,
     StateOfChargeSensor,
+    SunModeSensor,
 )
 
 DOMAIN = const.DOMAIN
@@ -86,6 +87,12 @@ async def async_setup_entry(
         StateOfChargeSensor(coordinator, config_entry),
         *[
             CpStateSensor(
+                coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
+            )
+            for x in coordinator.wb_indexes
+        ],
+        *[
+            SunModeSensor(
                 coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
             )
             for x in coordinator.wb_indexes
