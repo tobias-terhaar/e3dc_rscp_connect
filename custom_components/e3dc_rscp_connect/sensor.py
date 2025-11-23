@@ -11,11 +11,9 @@ from .entities import (
     EmergencyPowerSensor,
     EnergySensor,
     PowerSensor,
+    SGReadySensor,
     StateOfChargeSensor,
-    SunModeSensor,
 )
-
-from .entities.test_entity import TestSelect
 
 DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
@@ -87,6 +85,7 @@ async def async_setup_entry(
         PowerSensor(coordinator, config_entry, "PV String 3", "pvi_0_mppt_2_power"),
         EmergencyPowerSensor(coordinator, config_entry, "emergency_power_status"),
         StateOfChargeSensor(coordinator, config_entry),
+        SGReadySensor(coordinator, config_entry),
         *[
             CpStateSensor(
                 coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
