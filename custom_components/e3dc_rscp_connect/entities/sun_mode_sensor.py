@@ -4,6 +4,7 @@ from homeassistant.components.select import SelectEntity
 
 from ..coordinator import E3dcRscpCoordinator, WallboxIndentData  # noqa: TID252
 from .entity import E3dcConnectEntity
+from ..model.WallboxDataModel import WallboxDataModel
 
 
 class SunModeSensor(SelectEntity, E3dcConnectEntity):
@@ -32,11 +33,16 @@ class SunModeSensor(SelectEntity, E3dcConnectEntity):
     @property
     def current_option(self) -> str:
         """Get the current selected option."""
-        sun_mode = self.coordinator.data.get(
-            f"wb_{self._sub_device_index}_sun_mode_state"
+
+        wallbox: WallboxDataModel = self.coordinator.data.get(
+            f"wallbox_{self._sub_device_index}"
         )
+        sun_mode = wallbox.sun_mode
+
         if sun_mode:
             return "Sonnenmodus"
+        if sun_mode is None:
+            return None
         return "Mischmodus"
 
     async def async_select_option(self, option: str) -> None:

@@ -6,6 +6,7 @@ from .e3dc.RscpConnection import RscpConnection
 from .e3dc.RscpEncryption import RscpEncryption
 from .e3dc.RscpFrame import RscpFrame
 from .e3dc.RscpValue import RscpValue
+from .model.WallboxRscpModel import WallboxRscpModel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ class RscpClient:
         self.client = RscpConnection(
             host, port, RscpEncryption(rscp_key), username, password
         )
+        self.__wallboxes = []
 
     async def _connect_and_login(self) -> None:
         if not self.client.is_connected():
@@ -78,11 +80,16 @@ class RscpClient:
 
                     _LOGGER.info("%s", value.toString())
                     pass
+
         except ConnectionError as err:
             raise Exception(f"Error: {err}") from err
         except Exception as err:
             # TODO make Exception more specific
             raise Exception(f"Identification failed! Rscp Key correct?") from err
+
+        self.__wallboxes.clear()
+        for index in values["wb_indexes"]:
+            self.__wallboxes.append(WallboxRscpModel(index))
 
         return values
 
@@ -101,6 +108,16 @@ class RscpClient:
             frame.unpack(recv_buffer[0:recvd_frame_length])
 
         return frame.getRscpValues()
+
+    async def send_set_sun_mode_request(self, index: int, value: bool):
+        """Sends a sun mode set request to the storage."""
+
+        request = RscpValue.construct_rscp_value(
+            "TAG_WB_REQ_DATA",
+            [("TAG_WB_INDEX", index), ("TAG_WB_REQ_SET_SUN_MODE_ACTIVE", value)],
+        )
+        response = await self.send_and_receive(request)
+        _LOGGER.debug(f"{response}")
 
     def __create_rscp_tags_for_inverter(self, index: int):
         return RscpValue.construct_rscp_value(
@@ -144,76 +161,6 @@ class RscpClient:
 
         return extracted_values
 
-    def __create_rscp_tags_for_wallbox(self, index: int):
-        return RscpValue.construct_rscp_value(
-            "TAG_WB_REQ_DATA",
-            [
-                ("TAG_WB_INDEX", index),
-                ("TAG_WB_REQ_CP_STATE", None),
-                ("TAG_WB_REQ_PARAMETER_LIST", 0),
-                ("TAG_WB_REQ_PARAMETER_LIST", 1),
-                ("TAG_WB_REQ_ACTIVE_CHARGE_STRATEGY", None),
-                ("TAG_WB_REQ_ASSIGNED_POWER", None),
-                # ("TAG_WB_REQ_POWER", None),
-                ("TAG_WB_REQ_DEVICE_STATE", None),
-                ("TAG_WB_REQ_SUN_MODE_ACTIVE", None),
-            ],
-        )
-
-    def __extract_wallbox_data(self, container: RscpValue):
-        extracted_values = {}
-
-        wb_index = container.get_child("TAG_WB_INDEX")
-        if wb_index is None:
-            value = container.get_child("TAG_WB_REQ_INDEX")
-            _LOGGER.warning(
-                "No TAG_WB_INDEX in container, errorcode: %d", value.getValue()
-            )
-            return extracted_values
-
-        wb_index = wb_index.getValue()
-
-        value = container.get_child("TAG_WB_CP_STATE")
-        _LOGGER.info("CP State: %s", value.toString())
-        extracted_values[f"wb_{wb_index}_cp_state"] = (
-            value.getValue() if value is not None else None
-        )
-
-        assigned_power_container = container.get_child("TAG_WB_ASSIGNED_POWER")
-        if assigned_power_container:
-            extracted_values[f"wb_{wb_index}_assigned_power"] = sum(
-                x.getValue() for x in assigned_power_container.getValue()
-            )
-        else:
-            extracted_values[f"wb_{wb_index}_assigned_power"] = None
-
-        assigned_power_container = container.get_child("TAG_WB_POWER")
-        if assigned_power_container:
-            _LOGGER.info("WB POWER: %s", assigned_power_container.toString())
-
-            extracted_values[f"wb_{wb_index}_power"] = sum(
-                x.getValue() for x in assigned_power_container.getValue()
-            )
-        else:
-            extracted_values[f"wb_{wb_index}_power"] = None
-
-        value = container.get_child("TAG_WB_SUN_MODE_ACTIVE")
-        extracted_values[f"wb_{wb_index}_sun_mode_state"] = (
-            value.getValue() if value is not None else None
-        )
-
-        return extracted_values
-
-    async def send_set_sun_mode_request(self, index: int, value: bool):
-        """Sends a sun mode set request to the storage."""
-
-        request = RscpValue.construct_rscp_value(
-            "TAG_WB_REQ_DATA",
-            [("TAG_WB_INDEX", index), ("TAG_WB_REQ_SET_SUN_MODE_ACTIVE", value)],
-        )
-        response = await self.send_and_receive(request)
-        _LOGGER.debug(f"{response}")
-
     def __get_value_for_path(self, path, rscp_value: RscpValue):
         "Returns the value for the given path, or None if path not found."
         tag_value = RscpValue.get_tag_by_path([rscp_value], path)
@@ -234,8 +181,8 @@ class RscpClient:
             self.__create_rscp_tags_for_ems(requests)
             self.__create_rscp_tags_for_sgready(requests)
             requests.append(self.__create_rscp_tags_for_inverter(0))
-            requests.append(self.__create_rscp_tags_for_wallbox(0))
-            requests.append(self.__create_rscp_tags_for_wallbox(1))
+            for wallbox in self.__wallboxes:
+                requests.append(wallbox.get_rscp_tags())
             # transfer data and wait for response
             received_values = await self.send_and_receive(requests)
 
@@ -245,7 +192,10 @@ class RscpClient:
                 elif value.getTagName() == "TAG_PVI_DATA":
                     result_values.update(self.__extract_pvi_data(value))
                 elif value.getTagName() == "TAG_WB_DATA":
-                    result_values.update(self.__extract_wallbox_data(value))
+                    for wallbox in self.__wallboxes:
+                        wallbox.handle_rscp_data(
+                            value
+                        )  # should check if data has been handled!
                 elif value.getTagName() == "TAG_SGR_DATA":
                     result_values.update(self.__extract_sgready_data(value))
                 else:
@@ -254,6 +204,9 @@ class RscpClient:
         except Exception as err:
             # TODO make Exception more specific
             raise Exception("Error during data fetch: {err}") from err
+
+        for wallbox in self.__wallboxes:
+            result_values[f"wallbox_{wallbox.index}"] = wallbox.get_model()
 
         return result_values
 

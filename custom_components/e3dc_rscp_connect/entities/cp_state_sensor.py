@@ -29,7 +29,10 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
     @property
     def native_value(self):
         "Get the data."
-        cp_state = self.coordinator.data.get(f"wb_{self._sub_device_index}_cp_state")
+        wallbox = self.coordinator.data.get(f"wallbox_{self._sub_device_index}")
+        if not wallbox:
+            return "Unknown"
+        cp_state = wallbox.cp_state
 
         states = {
             "A": "Cable disconnected",

@@ -1,6 +1,9 @@
 "This file defines tests for CpStateSensor"
 
 from config.custom_components.e3dc_rscp_connect.entities import CpStateSensor
+from config.custom_components.e3dc_rscp_connect.model.WallboxDataModel import (
+    WallboxDataModel,
+)
 import pytest
 
 
@@ -46,9 +49,12 @@ def test_cp_state_sensor_known_states(mock_entry) -> None:
         "F": "Error",
     }
 
+    data_key = "wallbox_1"
+    wallbox = WallboxDataModel(1)
+
     for code, expected_state in states.items():
-        data_key = "wb_1_cp_state"
-        coordinator = MockCoordinator(data={data_key: code})
+        wallbox.cp_state = code
+        coordinator = MockCoordinator(data={data_key: wallbox})
         wallbox_ident = MockWallboxIdent("Wallbox 1")
 
         sensor = CpStateSensor(
@@ -63,7 +69,8 @@ def test_cp_state_sensor_known_states(mock_entry) -> None:
 
 def test_cp_state_sensor_unknown_state(mock_entry) -> None:
     """Test cp_state returns 'Unknown' for undefined state."""
-    coordinator = MockCoordinator(data={"wb_1_cp_state": "Z"})
+    wallbox = WallboxDataModel(1, cp_state="Z")
+    coordinator = MockCoordinator(data={"wallbox_1": wallbox})
     wallbox_ident = MockWallboxIdent("Wallbox 1")
 
     sensor = CpStateSensor(

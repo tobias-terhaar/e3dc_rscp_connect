@@ -13,6 +13,7 @@ from .entities import (
     PowerSensor,
     SGReadySensor,
     StateOfChargeSensor,
+    WallboxPowerSensor,
 )
 
 DOMAIN = const.DOMAIN
@@ -93,14 +94,7 @@ async def async_setup_entry(
             for x in coordinator.wb_indexes
         ],
         *[
-            PowerSensor(
-                coordinator,
-                config_entry,
-                "Zugewiesene Leistung",
-                f"wb_{x}_assigned_power",
-                "Wallbox",
-                x,
-            )
+            WallboxPowerSensor(coordinator, config_entry, "Zugewiesene Leistung", x)
             for x in coordinator.wb_indexes
         ],
     ]
