@@ -6,6 +6,8 @@ import struct
 
 from . import RscpTags
 
+log_error_tags = False
+
 RscpTypes = {
     "None": {"name": "None", "identifier": 0x00, "fmt": ""},
     "Bool": {"name": "Bool", "identifier": 0x01, "fmt": "?"},
@@ -280,7 +282,8 @@ class RscpValue:
                 self.__type = "Error32"
             else:
                 raise ValueError(f"unknown length ({data_length}) of error tag!")
-            log.error(f"received ERROR Tag: {tag_code:08X} {self.__tagname}!")
+            if log_error_tags:
+                log.error(f"received ERROR Tag: {tag_code:08X} {self.__tagname}!")
             expected_tag_type = RscpTypes[self.__type]
             self.isError = True
         else:
@@ -344,7 +347,7 @@ class RscpValue:
 
         self.__type = data_type_name
 
-        if self.isError:
+        if self.isError and log_error_tags:
             log.error(f"Error Data {self.__value}")
 
     def __unpackContainer(self, buffer):

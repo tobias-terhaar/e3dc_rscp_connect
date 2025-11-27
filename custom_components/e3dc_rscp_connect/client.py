@@ -50,7 +50,7 @@ class RscpClient:
 
             received_values = await self.send_and_receive(requests)
             for x in received_values:
-                _LOGGER.warning(f"received identification: {x.toString()}")
+                _LOGGER.info(f"received identification: {x.toString()}")
             #
             # TODO identify number of wallboxes used and create individual devices for it!
             # TODO read serial number and firmware from wallbox and add data to coordinator *and* to device_info

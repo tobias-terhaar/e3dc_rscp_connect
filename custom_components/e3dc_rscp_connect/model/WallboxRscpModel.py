@@ -73,7 +73,7 @@ class WallboxRscpModel:
             return False
 
         value = container.get_child("TAG_WB_CP_STATE")
-        logger.info("CP State: %s", value.toString())
+        logger.debug("CP State: %s", value.toString())
         model.cp_state = value.getValue() if value is not None else None
 
         assigned_power_container = container.get_child("TAG_WB_ASSIGNED_POWER")
@@ -84,7 +84,7 @@ class WallboxRscpModel:
 
         power_container = container.get_child("TAG_WB_POWER")
         if power_container:
-            logger.info("WB POWER: %s", power_container.toString())
+            logger.debug("WB POWER: %s", power_container.toString())
             model.power = sum(x.getValue() for x in power_container.getValue())
 
         value = container.get_child("TAG_WB_SUN_MODE_ACTIVE")

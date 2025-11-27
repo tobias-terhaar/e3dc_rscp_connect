@@ -7,7 +7,6 @@ from .RscpValue import RscpValue
 from .RscpFrame import RscpFrame
 
 log = logging.getLogger(__name__)
-log.setLevel(6)
 
 
 class RscpConnectionException(Exception):
