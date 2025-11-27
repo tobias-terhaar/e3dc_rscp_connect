@@ -33,7 +33,7 @@ def test_cp_state_sensor_attributes(mock_entry) -> None:
         coordinator=coordinator,
         entry=mock_entry,
         wallbox_id=1,
-        wallbox_ident=wallbox_ident,
+        wallbox=wallbox_ident,
     )
 
     assert sensor.name == "Ladestatus"
@@ -61,7 +61,7 @@ def test_cp_state_sensor_known_states(mock_entry) -> None:
             coordinator=coordinator,
             entry=mock_entry,
             wallbox_id=1,
-            wallbox_ident=wallbox_ident,
+            wallbox=wallbox_ident,
         )
 
         assert sensor.native_value == expected_state
@@ -77,7 +77,7 @@ def test_cp_state_sensor_unknown_state(mock_entry) -> None:
         coordinator=coordinator,
         entry=mock_entry,
         wallbox_id=1,
-        wallbox_ident=wallbox_ident,
+        wallbox=wallbox_ident,
     )
 
     assert sensor.native_value == "Unknown"
@@ -92,7 +92,7 @@ def test_cp_state_sensor_missing_value(mock_entry) -> None:
         coordinator=coordinator,
         entry=mock_entry,
         wallbox_id=1,
-        wallbox_ident=wallbox_ident,
+        wallbox=wallbox_ident,
     )
 
     assert sensor.native_value == "Unknown"

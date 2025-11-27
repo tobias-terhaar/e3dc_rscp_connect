@@ -1,25 +1,17 @@
 "This file contains the DataUpdateCoordinator for the e3dc_rscp_connect home assistant integration."
 
 from datetime import UTC, datetime, timedelta
-from dataclasses import dataclass
 import logging
 
+from config.custom_components.e3dc_rscp_connect.model.WallboxDataModel import (
+    WallboxDataModel,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .client import RscpClient
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class WallboxIndentData:
-    "Identity data of a connected wallbox."
-
-    serial: str
-    device_name: str
-    firmware_version: str
-    index: int
 
 
 class E3dcRscpCoordinator(DataUpdateCoordinator):
@@ -52,10 +44,6 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         self._mac: str = ""
         self._firmware: str = ""
 
-        self._wallbox_count: int = 0
-        self._wb_indexes: list = []
-        self._wallbox_data: dict = {}
-
         __update_interval = current.get("update_interval", 10)
 
         super().__init__(
@@ -84,16 +72,6 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         self._serialno = values["serial"]
         self._mac = values["mac"]
         self._firmware = values["sw_release"]
-        self._wallbox_count = len(values["wb_indexes"])
-        self._wb_indexes = values["wb_indexes"]
-        self._wallbox_data = {}
-        for x in self._wb_indexes:
-            serial = values[f"wb_{x}_serial"]
-            device_name = values[f"wb_{x}_device_name"]
-            firmware_version = values[f"wb_{x}_firmware_version"]
-            self._wallbox_data[x] = WallboxIndentData(
-                serial, device_name, firmware_version, x
-            )
 
     @property
     def serial(self) -> str:
@@ -108,18 +86,16 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         return self._firmware
 
     @property
-    def wallbox_count(self) -> int:
-        "Returns the number of detected wallboxes!"
-        return len(self._wb_indexes)
-
-    @property
-    def wb_indexes(self) -> list[int]:
+    def wallboxes(self) -> list[WallboxDataModel]:
         "Returns a list with the wallbox indexes which have been found."
-        return self._wb_indexes
+        return self.client.wallboxes
 
-    def get_wallbox_ident(self, index: int) -> WallboxIndentData:
+    def get_wallbox(self, index: int) -> WallboxDataModel:
         "Returns the ident data of a give wallbox."
-        return self._wallbox_data[index]
+        for wallbox in self.client.wallboxes:
+            if wallbox.index == index:
+                return wallbox
+        return None
 
     async def _async_update_data(self):
         try:

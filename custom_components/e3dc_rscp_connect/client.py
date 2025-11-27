@@ -23,6 +23,11 @@ class RscpClient:
         )
         self.__wallboxes = []
 
+    @property
+    def wallboxes(self):
+        "Get access to the stored wallbox data."
+        return [wallbox.get_model() for wallbox in self.__wallboxes]
+
     async def _connect_and_login(self) -> None:
         if not self.client.is_connected():
             await self.client.connect()
@@ -39,6 +44,8 @@ class RscpClient:
                 _LOGGER.info("Not connected, try to reconnect!")
                 await self._connect_and_login()
 
+            self.__wallboxes.clear()
+
             values = {}
             requests = []
             requests.append(RscpValue().withTagName("TAG_INFO_REQ_SERIAL_NUMBER", None))
@@ -47,6 +54,8 @@ class RscpClient:
             requests.append(
                 RscpValue().withTagName("TAG_INFO_REQ_ASSEMBLY_SERIAL_NUMBER", None)
             )
+
+            requests.extend(WallboxRscpModel.get_identification_tags())
 
             received_values = await self.send_and_receive(requests)
             for x in received_values:
@@ -59,27 +68,19 @@ class RscpClient:
             for value in received_values:
                 if value.getTagName() == "TAG_INFO_SERIAL_NUMBER":
                     values["serial"] = value.getValue()
-                elif value.getTagName() == "TAG_INFO_MAC_ADDRESS":
-                    values["mac"] = value.getValue()
-                elif value.getTagName() == "TAG_INFO_SW_RELEASE":
-                    values["sw_release"] = value.getValue()
-                elif value.getTagName() == "TAG_WB_DATA":
-                    index = value.get_child("TAG_WB_INDEX")
-                    serial = value.get_child("TAG_WB_SERIAL")
-                    device_name = value.get_child("TAG_WB_DEVICE_NAME")
-                    firmware_version = value.get_child("TAG_WB_FIRMWARE_VERSION")
-                    # if we received a serial, then we found an valid wallbox
-                    if serial:
-                        index = index.getValue()
-                        values[f"wb_{index}_serial"] = serial.getValue()
-                        values[f"wb_{index}_device_name"] = device_name.getValue()
-                        values[f"wb_{index}_firmware_version"] = (
-                            firmware_version.getValue()
-                        )
-                        values["wb_indexes"].append(index)
+                    continue
 
-                    _LOGGER.info("%s", value.toString())
-                    pass
+                if value.getTagName() == "TAG_INFO_MAC_ADDRESS":
+                    values["mac"] = value.getValue()
+                    continue
+                if value.getTagName() == "TAG_INFO_SW_RELEASE":
+                    values["sw_release"] = value.getValue()
+                    continue
+
+                wallbox = WallboxRscpModel.identify_wallbox(value)
+                if wallbox is not None:
+                    self.__wallboxes.append(wallbox)
+                    continue
 
         except ConnectionError as err:
             raise Exception(f"Error: {err}") from err
@@ -87,9 +88,9 @@ class RscpClient:
             # TODO make Exception more specific
             raise Exception(f"Identification failed! Rscp Key correct?") from err
 
-        self.__wallboxes.clear()
-        for index in values["wb_indexes"]:
-            self.__wallboxes.append(WallboxRscpModel(index))
+        # for index in values["wb_indexes"]:
+        #     _LOGGER.info(f"Adding wallbox: {index}")
+        #     self.__wallboxes.append(WallboxRscpModel(index))
 
         return values
 

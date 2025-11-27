@@ -88,14 +88,14 @@ async def async_setup_entry(
         StateOfChargeSensor(coordinator, config_entry),
         SGReadySensor(coordinator, config_entry),
         *[
-            CpStateSensor(
-                coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
-            )
-            for x in coordinator.wb_indexes
+            CpStateSensor(coordinator, config_entry, wallbox.index, wallbox)
+            for wallbox in coordinator.wallboxes
         ],
         *[
-            WallboxPowerSensor(coordinator, config_entry, "Zugewiesene Leistung", x)
-            for x in coordinator.wb_indexes
+            WallboxPowerSensor(
+                coordinator, config_entry, "Zugewiesene Leistung", wallbox.index
+            )
+            for wallbox in coordinator.wallboxes
         ],
     ]
 

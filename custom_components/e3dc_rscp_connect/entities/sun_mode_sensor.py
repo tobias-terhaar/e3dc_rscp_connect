@@ -2,7 +2,7 @@
 
 from homeassistant.components.select import SelectEntity
 
-from ..coordinator import E3dcRscpCoordinator, WallboxIndentData  # noqa: TID252
+from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
 from .entity import E3dcConnectEntity
 from ..model.WallboxDataModel import WallboxDataModel
 
@@ -15,7 +15,7 @@ class SunModeSensor(SelectEntity, E3dcConnectEntity):
         coordinator: E3dcRscpCoordinator,
         entry,
         wallbox_id: int,
-        wallbox_ident: WallboxIndentData,
+        wallbox: WallboxDataModel,
     ) -> None:
         "Init the sensor."
         super().__init__(coordinator, entry, "Wallbox", wallbox_id)
@@ -24,7 +24,7 @@ class SunModeSensor(SelectEntity, E3dcConnectEntity):
 
         self._attr_name = "Lademodus"
         self._attr_unique_id = (
-            f"{wallbox_ident.device_name.lower().replace(' ', '_')}_sun_mode_state1"
+            f"{wallbox.device_name.lower().replace(' ', '_')}_sun_mode_state1"
         )
 
         self._options = ["Sonnenmodus", "Mischmodus"]

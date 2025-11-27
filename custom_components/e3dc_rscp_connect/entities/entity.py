@@ -27,7 +27,7 @@ class E3dcConnectEntity(CoordinatorEntity):
     def device_info(self):
         "Return the device info depending on the subdevice type."
         if self._sub_device_type == "Wallbox":
-            wb_info = self.coordinator.get_wallbox_ident(self._sub_device_index)
+            wb_info = self.coordinator.get_wallbox(self._sub_device_index)
             return {
                 "identifiers": {
                     (DOMAIN, self._entry.entry_id + f"_wb_{self._sub_device_index}")

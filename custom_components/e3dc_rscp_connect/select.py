@@ -19,10 +19,8 @@ async def async_setup_entry(
 
     selects = [
         *[
-            SunModeSensor(
-                coordinator, config_entry, x, coordinator.get_wallbox_ident(x)
-            )
-            for x in coordinator.wb_indexes
+            SunModeSensor(coordinator, config_entry, wallbox.index, wallbox)
+            for wallbox in coordinator.wallboxes
         ],
     ]
 
