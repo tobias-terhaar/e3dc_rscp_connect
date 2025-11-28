@@ -3,12 +3,13 @@
 import logging
 
 from ..e3dc.RscpValue import RscpValue  # noqa: TID252
+from .RscpModelInterface import RscpModelInterface
 from .WallboxDataModel import WallboxDataModel
 
 logger = logging.getLogger(__name__)
 
 
-class WallboxRscpModel:
+class WallboxRscpModel(RscpModelInterface):
     "This class represents the RSCP communication with a wallbox and stores the data in a WallboxDataModel."
 
     def __init__(
@@ -50,7 +51,7 @@ class WallboxRscpModel:
         ]
 
     @staticmethod
-    def identify_wallbox(container: RscpValue):
+    def identify(container: RscpValue) -> bool:
         """Tries to identify the wallbox. Input should be a container of type: TAG_WB_DATA."""
         if container.getTagName() != "TAG_WB_DATA":
             return None
@@ -70,7 +71,7 @@ class WallboxRscpModel:
             )
         return None
 
-    def get_rscp_tags(self) -> list:
+    def get_rscp_tags(self) -> list[RscpValue]:
         "Returns all tags used to get informations from device!"
         return RscpValue.construct_rscp_value(
             "TAG_WB_REQ_DATA",

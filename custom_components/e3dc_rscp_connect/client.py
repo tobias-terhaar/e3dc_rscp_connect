@@ -77,7 +77,7 @@ class RscpClient:
                     values["sw_release"] = value.getValue()
                     continue
 
-                wallbox = WallboxRscpModel.identify_wallbox(value)
+                wallbox = WallboxRscpModel.identify(value)
                 if wallbox is not None:
                     self.__wallboxes.append(wallbox)
                     continue
