@@ -3,8 +3,8 @@
 from homeassistant.components.select import SelectEntity
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
+from ..model.WallboxDataModel import WallboxDataModel  # noqa: TID252
 from .entity import E3dcConnectEntity
-from ..model.WallboxDataModel import WallboxDataModel
 
 
 class SunModeSensor(SelectEntity, E3dcConnectEntity):

@@ -1,10 +1,10 @@
-import socket
-import logging
 import asyncio
+import logging
+import socket
 
 from .RscpEncryption import RscpEncryption
-from .RscpValue import RscpValue
 from .RscpFrame import RscpFrame
+from .RscpValue import RscpValue
 
 log = logging.getLogger(__name__)
 
