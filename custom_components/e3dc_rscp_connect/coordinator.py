@@ -3,13 +3,11 @@
 from datetime import UTC, datetime, timedelta
 import logging
 
-from config.custom_components.e3dc_rscp_connect.model.WallboxDataModel import (
-    WallboxDataModel,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .client import RscpClient
+from .model.WallboxDataModel import WallboxDataModel
 
 _LOGGER = logging.getLogger(__name__)
 
