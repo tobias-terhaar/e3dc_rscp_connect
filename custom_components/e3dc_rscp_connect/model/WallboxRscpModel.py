@@ -100,8 +100,6 @@ class WallboxRscpModel:
         if container.getTagName() != "TAG_WB_DATA":
             return False
 
-        self.__model.reset_state_data()
-
         wb_index = container.get_child("TAG_WB_INDEX")
         if wb_index is None:
             value = container.get_child("TAG_WB_REQ_INDEX")
@@ -114,6 +112,8 @@ class WallboxRscpModel:
         # check if data in container is targeted for our index!
         if wb_index != self.__index:
             return False
+
+        self.__model.reset_state_data()
 
         value = container.get_child("TAG_WB_CP_STATE")
         logger.debug("CP State: %s", value.toString())

@@ -1,4 +1,4 @@
-"This file defines tests for CpStateSensor"
+"This file defines tests for CpStateSensor."
 
 from config.custom_components.e3dc_rscp_connect.entities import CpStateSensor
 from config.custom_components.e3dc_rscp_connect.model.WallboxDataModel import (
