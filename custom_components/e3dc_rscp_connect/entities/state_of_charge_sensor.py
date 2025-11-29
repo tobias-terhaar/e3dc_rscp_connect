@@ -23,7 +23,7 @@ class StateOfChargeSensor(E3dcConnectEntity, SensorEntity):
     @property
     def native_value(self):
         "Get the data."
-        storage: StorageDataModel = self.coordinator.data.get("storage")
+        storage: StorageDataModel = self.coordinator.storage
         if storage is None:
             return "Unknown"
 

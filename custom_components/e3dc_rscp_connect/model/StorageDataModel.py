@@ -7,13 +7,13 @@ from dataclasses import dataclass, field
 class EmsPowerModel:
     "Holding power values delivered by EMS tags."
 
-    home: int = 0
-    battery: int = 0
-    grid: int = 0
-    pv: int = 0
-    additional: int = 0
-    wallbox: int = 0
-    wallbox_pv: int = 0
+    home: int | None = None
+    battery: int | None = None
+    grid: int | None = None
+    pv: int | None = None
+    additional: int | None = None
+    wallbox: int | None = None
+    wallbox_pv: int | None = None
 
 
 @dataclass
@@ -29,6 +29,6 @@ class StorageDataModel:
     powers: EmsPowerModel = field(default_factory=lambda: EmsPowerModel())
 
     # power data
-    bat_soc: int = 0
+    bat_soc: int | None = None
 
-    emergency_power_state: int = 0
+    emergency_power_state: int | None = None
