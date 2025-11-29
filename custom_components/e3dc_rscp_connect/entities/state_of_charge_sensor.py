@@ -4,6 +4,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
+from ..model.StorageDataModel import StorageDataModel  # noqa: TID252
 from .entity import E3dcConnectEntity
 
 
@@ -22,4 +23,8 @@ class StateOfChargeSensor(E3dcConnectEntity, SensorEntity):
     @property
     def native_value(self):
         "Get the data."
-        return self.coordinator.data.get("bat_soc")
+        storage: StorageDataModel = self.coordinator.data.get("storage")
+        if storage is None:
+            return "Unknown"
+
+        return storage.bat_soc

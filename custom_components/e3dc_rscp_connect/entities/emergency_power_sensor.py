@@ -3,6 +3,7 @@
 from homeassistant.components.sensor import SensorEntity
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
+from ..model.StorageDataModel import StorageDataModel  # noqa: TID252
 from .entity import E3dcConnectEntity
 
 
@@ -23,7 +24,11 @@ class EmergencyPowerSensor(E3dcConnectEntity, SensorEntity):
     @property
     def native_value(self):
         "Get the data."
-        ep_state = self.coordinator.data.get(self._sensor_value_id)
+        storage: StorageDataModel = self.coordinator.data.get("storage")
+        if storage is None:
+            return "Unknown"
+
+        ep_state = storage.emergency_power_state
 
         states = {
             0: "not possible",

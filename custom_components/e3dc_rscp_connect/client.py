@@ -6,6 +6,7 @@ from .e3dc.RscpConnection import RscpConnection
 from .e3dc.RscpEncryption import RscpEncryption
 from .e3dc.RscpFrame import RscpFrame
 from .e3dc.RscpValue import RscpValue
+from .model.StorageRscpModel import StorageRscpModel
 from .model.WallboxRscpModel import WallboxRscpModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,12 +22,18 @@ class RscpClient:
         self.client = RscpConnection(
             host, port, RscpEncryption(rscp_key), username, password
         )
+        self.__storage = None
         self.__wallboxes = []
 
     @property
     def wallboxes(self):
         "Get access to the stored wallbox data."
         return [wallbox.get_model() for wallbox in self.__wallboxes]
+
+    @property
+    def storage(self):
+        "Get access to storage data."
+        return self.__storage.get_model()
 
     async def _connect_and_login(self) -> None:
         if not self.client.is_connected():
@@ -46,36 +53,19 @@ class RscpClient:
 
             self.__wallboxes.clear()
 
-            values = {}
             requests = []
-            requests.append(RscpValue().withTagName("TAG_INFO_REQ_SERIAL_NUMBER", None))
-            requests.append(RscpValue().withTagName("TAG_INFO_REQ_MAC_ADDRESS", None))
-            requests.append(RscpValue().withTagName("TAG_INFO_REQ_SW_RELEASE", None))
-            requests.append(
-                RscpValue().withTagName("TAG_INFO_REQ_ASSEMBLY_SERIAL_NUMBER", None)
-            )
-
+            requests.extend(StorageRscpModel.get_identification_tags())
             requests.extend(WallboxRscpModel.get_identification_tags())
 
             received_values = await self.send_and_receive(requests)
             for x in received_values:
                 _LOGGER.info(f"received identification: {x.toString()}")
-            #
-            # TODO identify number of wallboxes used and create individual devices for it!
             # TODO read serial number and firmware from wallbox and add data to coordinator *and* to device_info
             #
-            values["wb_indexes"] = []
             for value in received_values:
-                if value.getTagName() == "TAG_INFO_SERIAL_NUMBER":
-                    values["serial"] = value.getValue()
-                    continue
-
-                if value.getTagName() == "TAG_INFO_MAC_ADDRESS":
-                    values["mac"] = value.getValue()
-                    continue
-                if value.getTagName() == "TAG_INFO_SW_RELEASE":
-                    values["sw_release"] = value.getValue()
-                    continue
+                storage = StorageRscpModel.identify(value)
+                if storage is not None:
+                    self.__storage = storage
 
                 wallbox = WallboxRscpModel.identify(value)
                 if wallbox is not None:
@@ -88,11 +78,7 @@ class RscpClient:
             # TODO make Exception more specific
             raise Exception(f"Identification failed! Rscp Key correct?") from err
 
-        # for index in values["wb_indexes"]:
-        #     _LOGGER.info(f"Adding wallbox: {index}")
-        #     self.__wallboxes.append(WallboxRscpModel(index))
-
-        return values
+        return
 
     async def send_and_receive(self, rscpValuesToSend: list) -> list:
         """Sends and receives data to the device.
@@ -179,18 +165,19 @@ class RscpClient:
 
             requests = []
 
-            self.__create_rscp_tags_for_ems(requests)
+            requests.extend(self.__storage.get_rscp_tags())
             self.__create_rscp_tags_for_sgready(requests)
             requests.append(self.__create_rscp_tags_for_inverter(0))
             for wallbox in self.__wallboxes:
-                requests.append(wallbox.get_rscp_tags())
+                requests.extend(wallbox.get_rscp_tags())
             # transfer data and wait for response
             received_values = await self.send_and_receive(requests)
 
             for value in received_values:
-                if value.getTagName().startswith("TAG_EMS_"):
-                    self.__handle_rcsp_tags_for_ems(value, result_values)
-                elif value.getTagName() == "TAG_PVI_DATA":
+                if self.__storage.handle_rscp_data(value):
+                    continue
+
+                if value.getTagName() == "TAG_PVI_DATA":
                     result_values.update(self.__extract_pvi_data(value))
                 elif value.getTagName() == "TAG_WB_DATA":
                     for wallbox in self.__wallboxes:
@@ -206,6 +193,7 @@ class RscpClient:
             # TODO make Exception more specific
             raise Exception("Error during data fetch: {err}") from err
 
+        result_values["storage"] = self.__storage.get_model()
         for wallbox in self.__wallboxes:
             result_values[f"wallbox_{wallbox.index}"] = wallbox.get_model()
 
@@ -240,38 +228,3 @@ class RscpClient:
                 [("TAG_SGR_INDEX", 0xFF), ("TAG_SGR_REQ_STATE", None)],
             )
         )
-
-    def __create_rscp_tags_for_ems(self, requests):
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_HOME", None))
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_BAT", None))
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_GRID", None))
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_PV", None))
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_ADD", None))
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_WB_ALL", None))
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_WB_SOLAR", None))
-        requests.append(RscpValue().withTagName("TAG_EMS_REQ_BAT_SOC", None))
-        requests.append(
-            RscpValue().withTagName("TAG_EMS_REQ_EMERGENCY_POWER_STATUS", None)
-        )
-
-    def __handle_rcsp_tags_for_ems(self, value: RscpValue, result_values: dict):
-        if value.getTagName() == "TAG_EMS_BAT_SOC":
-            result_values["bat_soc"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_POWER_HOME":
-            result_values["home_power"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_POWER_BAT":
-            result_values["battery_power"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_POWER_GRID":
-            result_values["grid_power"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_POWER_PV":
-            result_values["pv_power"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_POWER_ADD":
-            result_values["additional_power"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_POWER_WB_ALL":
-            result_values["wallbox_power"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_POWER_WB_SOLAR":
-            result_values["wallbox_pv_power"] = value.getValue()
-        elif value.getTagName() == "TAG_EMS_EMERGENCY_POWER_STATUS":
-            result_values["emergency_power_status"] = value.getValue()
-        else:
-            _LOGGER.warning("Received unknown EMS tag: %s", value.getTagName())

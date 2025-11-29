@@ -8,6 +8,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .client import RscpClient
 from .model.WallboxDataModel import WallboxDataModel
+from .model.StorageDataModel import StorageDataModel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,10 +39,6 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         self.__last_device_info_update: datetime | None = None
         self.__device_info_interval = timedelta(minutes=5)
 
-        self._serialno: str = ""
-        self._mac: str = ""
-        self._firmware: str = ""
-
         __update_interval = current.get("update_interval", 10)
 
         super().__init__(
@@ -66,27 +63,17 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         return False
 
     async def __update_device_info(self):
-        values = await self.client.identify_device()
-        self._serialno = values["serial"]
-        self._mac = values["mac"]
-        self._firmware = values["sw_release"]
-
-    @property
-    def serial(self) -> str:
-        return self._serialno
-
-    @property
-    def ethernet_mac(self) -> str:
-        return self._mac
-
-    @property
-    def firmware(self) -> str:
-        return self._firmware
+        await self.client.identify_device()
 
     @property
     def wallboxes(self) -> list[WallboxDataModel]:
         "Returns a list with the wallbox indexes which have been found."
         return self.client.wallboxes
+
+    @property
+    def storage(self) -> StorageDataModel:
+        "Get access to the storage data."
+        return self.client.storage
 
     def get_wallbox(self, index: int) -> WallboxDataModel:
         "Returns the ident data of a give wallbox."

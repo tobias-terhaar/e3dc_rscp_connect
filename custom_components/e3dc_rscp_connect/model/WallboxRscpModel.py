@@ -73,23 +73,25 @@ class WallboxRscpModel(RscpModelInterface):
 
     def get_rscp_tags(self) -> list[RscpValue]:
         "Returns all tags used to get informations from device!"
-        return RscpValue.construct_rscp_value(
-            "TAG_WB_REQ_DATA",
-            [
-                ("TAG_WB_INDEX", self.__index),
-                ("TAG_WB_REQ_CP_STATE", None),
-                ("TAG_WB_REQ_PARAMETER_LIST", 0),
-                ("TAG_WB_REQ_PARAMETER_LIST", 1),
-                ("TAG_WB_REQ_ACTIVE_CHARGE_STRATEGY", None),
-                ("TAG_WB_REQ_ASSIGNED_POWER", None),
-                # ("TAG_WB_REQ_POWER", None),
-                ("TAG_WB_REQ_DEVICE_STATE", None),
-                ("TAG_WB_REQ_SUN_MODE_ACTIVE", None),
-                # "TAG_WB_REQ_SET_ABORT_CHARGING"
-                # "TAG_WB_REQ_SET_STATION_ENABLED"
-                # "TAG_WB_REQ_SET_STATION_AVAILABLE",
-            ],
-        )
+        return [
+            RscpValue.construct_rscp_value(
+                "TAG_WB_REQ_DATA",
+                [
+                    ("TAG_WB_INDEX", self.__index),
+                    ("TAG_WB_REQ_CP_STATE", None),
+                    ("TAG_WB_REQ_PARAMETER_LIST", 0),
+                    ("TAG_WB_REQ_PARAMETER_LIST", 1),
+                    ("TAG_WB_REQ_ACTIVE_CHARGE_STRATEGY", None),
+                    ("TAG_WB_REQ_ASSIGNED_POWER", None),
+                    # ("TAG_WB_REQ_POWER", None),
+                    ("TAG_WB_REQ_DEVICE_STATE", None),
+                    ("TAG_WB_REQ_SUN_MODE_ACTIVE", None),
+                    # "TAG_WB_REQ_SET_ABORT_CHARGING"
+                    # "TAG_WB_REQ_SET_STATION_ENABLED"
+                    # "TAG_WB_REQ_SET_STATION_AVAILABLE",
+                ],
+            )
+        ]
 
     def get_rscp_tags_slow(self):
         pass

@@ -32,7 +32,7 @@ class E3dcConnectEntity(CoordinatorEntity):
                 "identifiers": {
                     (DOMAIN, self._entry.entry_id + f"_wb_{self._sub_device_index}")
                 },
-                "name": f"Wallbox {wb_info.device_name} connected to {self.coordinator.serial}",
+                "name": f"Wallbox {wb_info.device_name} connected to {self.coordinator.storage.serial}",
                 "manufacturer": "E3/DC by HagerEnergy",
                 "model": "Wallbox X",
                 # use sw_version stored in coordinator!
@@ -40,8 +40,8 @@ class E3dcConnectEntity(CoordinatorEntity):
             }
         return {
             "identifiers": {(DOMAIN, self._entry.entry_id)},
-            "name": self.coordinator.serial,
+            "name": self.coordinator.storage.serial,
             "manufacturer": "E3/DC by HagerEnergy",
             "model": "S10",
-            "sw_version": self.coordinator.firmware,
+            "sw_version": self.coordinator.storage.sw_version,
         }
