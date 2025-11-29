@@ -30,11 +30,21 @@ async def async_setup_entry(
     ]
 
     sensors = [
-        PowerSensor(coordinator, config_entry, "Home Power", "home_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "Home Power",
+            data_getter=lambda: coordinator.storage.powers.home,
+        ),
         EnergySensor(coordinator, config_entry, "Home Consumption", "home_power"),
         #
         # grid sensors
-        PowerSensor(coordinator, config_entry, "Grid Power", "grid_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "Grid Power",
+            data_getter=lambda: coordinator.storage.powers.grid,
+        ),
         EnergySensor(
             coordinator, config_entry, "Grid Consumption Energy", "grid_power"
         ),
@@ -47,7 +57,12 @@ async def async_setup_entry(
         ),
         #
         # battery sensors
-        PowerSensor(coordinator, config_entry, "Battery Power", "battery_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "Battery Power",
+            data_getter=lambda: coordinator.storage.powers.battery,
+        ),
         EnergySensor(
             coordinator, config_entry, "Battery Charge Energy", "battery_power"
         ),
@@ -60,11 +75,21 @@ async def async_setup_entry(
         ),
         #
         # PV sensors
-        PowerSensor(coordinator, config_entry, "PV Power", "pv_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "PV Power",
+            data_getter=lambda: coordinator.storage.powers.pv,
+        ),
         EnergySensor(coordinator, config_entry, "PV Production Energy", "pv_power"),
         #
         # Additional generators
-        PowerSensor(coordinator, config_entry, "Additional Power", "additional_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "Additional Power",
+            data_getter=lambda: coordinator.storage.powers.additional,
+        ),
         EnergySensor(
             coordinator,
             config_entry,
@@ -73,17 +98,42 @@ async def async_setup_entry(
         ),
         #
         # Wallbox sensors (EMS)
-        PowerSensor(coordinator, config_entry, "Wallbox Power", "wallbox_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "Wallbox Power",
+            data_getter=lambda: coordinator.storage.powers.wallbox,
+        ),
         EnergySensor(
             coordinator, config_entry, "Wallbox Charge Energy", "wallbox_power"
         ),
-        PowerSensor(coordinator, config_entry, "Wallbox PV Power", "wallbox_pv_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "Wallbox PV Power",
+            data_getter=lambda: coordinator.storage.powers.wallbox_pv,
+        ),
         EnergySensor(
             coordinator, config_entry, "Wallbox Sun Charge Energy", "wallbox_pv_power"
         ),
-        PowerSensor(coordinator, config_entry, "PV String 1", "pvi_0_mppt_0_power"),
-        PowerSensor(coordinator, config_entry, "PV String 2", "pvi_0_mppt_1_power"),
-        PowerSensor(coordinator, config_entry, "PV String 3", "pvi_0_mppt_2_power"),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "PV String 1",
+            sensor_value_id="pvi_0_mppt_0_power",
+        ),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "PV String 2",
+            sensor_value_id="pvi_0_mppt_1_power",
+        ),
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "PV String 3",
+            sensor_value_id="pvi_0_mppt_2_power",
+        ),
         EmergencyPowerSensor(coordinator, config_entry, "emergency_power_status"),
         StateOfChargeSensor(coordinator, config_entry),
         SGReadySensor(coordinator, config_entry),
