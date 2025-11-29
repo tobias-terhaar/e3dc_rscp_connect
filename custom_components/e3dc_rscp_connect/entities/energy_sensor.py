@@ -1,5 +1,6 @@
 """Implements the energy sensor entity."""
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -19,7 +20,8 @@ class EnergySensor(E3dcConnectEntity, SensorEntity, RestoreEntity):
         coordinator: E3dcRscpCoordinator,
         entry,
         name: str,
-        power_value: str,
+        sensor_value_id: str | None = None,
+        data_getter: Callable[[], int | None] | None = None,
         negative_direction: bool = False,
         sub_device_type: str | None = None,
         sub_device_index: str | None = None,
@@ -27,8 +29,12 @@ class EnergySensor(E3dcConnectEntity, SensorEntity, RestoreEntity):
         """Inits the PowerSensor with a location. The location is used to create the attribute name and the unique id."""
         super().__init__(coordinator, entry, sub_device_type, sub_device_index)
 
+        if data_getter is None and sensor_value_id is None:
+            raise ValueError("either data_getter or sensor_value_id must be set.")
+
         self._negative_direction = negative_direction
-        self._location = power_value
+        self._location = sensor_value_id
+        self._data_getter = data_getter
 
         self._attr_name = name
         self._attr_unique_id = (
@@ -56,7 +62,10 @@ class EnergySensor(E3dcConnectEntity, SensorEntity, RestoreEntity):
     def _handle_coordinator_update(self):
         """Handle updated data from coordinator."""
         now = datetime.now(UTC)
-        power_watt = self.coordinator.data.get(f"{self._location}")
+        if self._data_getter is not None:
+            power_watt = self._data_getter()
+        else:
+            power_watt = self.coordinator.data.get(f"{self._location}")
 
         if power_watt is None:
             # _LOGGER.warning("Power value missing for location %s", self._location)

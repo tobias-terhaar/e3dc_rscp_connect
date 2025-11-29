@@ -8,6 +8,7 @@ class MockCoordinator:
     def __init__(self, data=None):
         self.data = data or {}
         self._listeners = []
+        self.storage = Mock()
 
     def async_add_listener(self, callback, context=None):
         self._listeners.append(callback)
@@ -34,7 +35,7 @@ def test_energy_sensor_attributes(coordinator, mock_entry):
         coordinator=coordinator,
         entry=mock_entry,
         name="Grid Import",
-        power_value="grid_power",
+        sensor_value_id="grid_power",
     )
 
     assert sensor.name == "Grid Import"
@@ -52,7 +53,7 @@ async def test_restore_last_state(coordinator, mock_entry):
         coordinator=coordinator,
         entry=mock_entry,
         name="Grid Import",
-        power_value="grid_power",
+        sensor_value_id="grid_power",
     )
 
     async def mock_get_last_state():
@@ -71,7 +72,7 @@ async def test_energy_calculation_positive_flow(coordinator, mock_entry):
         coordinator=coordinator,
         entry=mock_entry,
         name="Grid Import",
-        power_value="grid_power",
+        sensor_value_id="grid_power",
     )
 
     sensor.hass = Mock()
@@ -90,13 +91,39 @@ async def test_energy_calculation_positive_flow(coordinator, mock_entry):
 
 
 @pytest.mark.asyncio
+async def test_energy_calculation_positive_flow_data_getter(coordinator, mock_entry):
+    """Test energy accumulation in positive direction."""
+    sensor = EnergySensor(
+        coordinator=coordinator,
+        entry=mock_entry,
+        name="Grid Import",
+        data_getter=lambda: coordinator.storage.powers.grid,
+    )
+
+    sensor.hass = Mock()
+    sensor.async_write_ha_state = Mock()
+
+    now = datetime.now(UTC)
+    sensor._last_update = now - timedelta(seconds=3600)
+    sensor._last_power = 1000  # 1 kW
+
+    coordinator.storage.powers.grid = 2000
+
+    sensor._handle_coordinator_update()
+
+    # Durchschnittsleistung: (1000+2000)/2 = 1500 W = 1.5 kW
+    # Dauer: 1 h → Energie: 1.5 kWh
+    assert round(sensor.native_value, 3) == 1.5
+
+
+@pytest.mark.asyncio
 async def test_energy_calculation_negative_flow(coordinator, mock_entry):
     """Test energy accumulation in negative direction with reverse sign."""
     sensor = EnergySensor(
         coordinator=coordinator,
         entry=mock_entry,
         name="Grid Export",
-        power_value="grid_power",
+        sensor_value_id="grid_power",
         negative_direction=True,
     )
     sensor.hass = Mock()
@@ -122,7 +149,7 @@ def test_missing_power_value_handling(coordinator, mock_entry):
         coordinator=coordinator,
         entry=mock_entry,
         name="PV",
-        power_value="pv_power",
+        sensor_value_id="pv_power",
     )
 
     # No data yet
