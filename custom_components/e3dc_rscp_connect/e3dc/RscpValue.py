@@ -358,8 +358,6 @@ class RscpValue:
             values.append(value)
             data_position += value.getPackedDataSize()
 
-        if len(values) == 1:
-            return values[0]
         return values
 
     def toString(self, prefix=""):
