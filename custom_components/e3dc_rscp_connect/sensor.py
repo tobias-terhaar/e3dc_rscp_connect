@@ -20,6 +20,16 @@ DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_inverter_mppt_power(
+    coordinator: E3dcRscpCoordinator, inverter: int, mppt_index: int
+):
+    """This is a helper function, to return the MPPT power of a inverter."""
+    _inverter = coordinator.storage.inverters.get(inverter, None)
+    if _inverter is None:
+        return None
+    return _inverter.power_mppt.get(mppt_index, None)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, config_entry, async_add_entities
 ) -> None:
@@ -137,21 +147,24 @@ async def async_setup_entry(
             coordinator,
             config_entry,
             "PV String 1",
-            sensor_value_id="pvi_0_mppt_0_power",
+            data_getter=lambda: get_inverter_mppt_power(coordinator, 0, 0),
+            # sensor_value_id="pvi_0_mppt_0_power",
         ),
         PowerSensor(
             coordinator,
             config_entry,
             "PV String 2",
-            sensor_value_id="pvi_0_mppt_1_power",
+            data_getter=lambda: get_inverter_mppt_power(coordinator, 0, 1),
+            # sensor_value_id="pvi_0_mppt_1_power",
         ),
         PowerSensor(
             coordinator,
             config_entry,
             "PV String 3",
-            sensor_value_id="pvi_0_mppt_2_power",
+            data_getter=lambda: get_inverter_mppt_power(coordinator, 0, 2),
+            # sensor_value_id="pvi_0_mppt_2_power",
         ),
-        EmergencyPowerSensor(coordinator, config_entry, "emergency_power_status"),
+        EmergencyPowerSensor(coordinator, config_entry),
         StateOfChargeSensor(coordinator, config_entry),
         SGReadySensor(coordinator, config_entry),
         *[

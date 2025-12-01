@@ -17,6 +17,11 @@ class EmsPowerModel:
 
 
 @dataclass
+class PvInverterData:
+    power_mppt: dict[int, int | None] = field(default_factory=dict)
+
+
+@dataclass
 class StorageDataModel:
     "The dataclass holding the information."
 
@@ -26,9 +31,11 @@ class StorageDataModel:
     mac_addr: str | None = None
     sw_version: str | None = None
 
-    powers: EmsPowerModel = field(default_factory=lambda: EmsPowerModel())
+    powers: EmsPowerModel = field(default_factory=EmsPowerModel)
 
     # power data
     bat_soc: int | None = None
 
     emergency_power_state: int | None = None
+
+    inverters: dict[int, PvInverterData] = field(default_factory=dict)

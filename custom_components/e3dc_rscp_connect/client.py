@@ -106,48 +106,6 @@ class RscpClient:
         response = await self.send_and_receive(request)
         _LOGGER.debug(f"{response}")
 
-    def __create_rscp_tags_for_inverter(self, index: int):
-        return RscpValue.construct_rscp_value(
-            "TAG_PVI_REQ_DATA",
-            [
-                ("TAG_PVI_INDEX", index),
-                # ("TAG_PVI_REQ_AC_POWER", 0),
-                # ("TAG_PVI_REQ_AC_POWER", 1),
-                # ("TAG_PVI_REQ_AC_POWER", 2),
-                # ("TAG_PVI_REQ_AC_VOLTAGE", 0),
-                # ("TAG_PVI_REQ_AC_VOLTAGE", 1),
-                # ("TAG_PVI_REQ_AC_VOLTAGE", 2),
-                ("TAG_PVI_REQ_DC_POWER", 0),
-                ("TAG_PVI_REQ_DC_POWER", 1),
-                ("TAG_PVI_REQ_DC_POWER", 2),
-            ],
-        )
-
-    def __extract_pvi_data(self, container: RscpValue) -> dict:
-        extracted_values = {}
-
-        pvi_index = container.get_child("TAG_PVI_INDEX")
-        if pvi_index is None:
-            value = container.get_child("TAG_PVI_REQ_INDEX")
-            _LOGGER.warning(
-                "No TAG_PVI_REQ_INDEX in container, errorcode: %d", value.getValue()
-            )
-            return extracted_values
-
-        pvi_index = pvi_index.getValue()
-
-        dc_power_tags = container.get_childs("TAG_PVI_DC_POWER")
-        for tag in dc_power_tags:
-            mppt_index = tag.get_child("TAG_PVI_INDEX")
-            if mppt_index is not None:
-                mppt_index = mppt_index.getValue()
-                power_value = tag.get_child("TAG_PVI_VALUE")
-                extracted_values[f"pvi_{pvi_index}_mppt_{mppt_index}_power"] = (
-                    power_value.getValue() if power_value is not None else None
-                )
-
-        return extracted_values
-
     def __get_value_for_path(self, path, rscp_value: RscpValue):
         "Returns the value for the given path, or None if path not found."
         tag_value = RscpValue.get_tag_by_path([rscp_value], path)
@@ -167,7 +125,7 @@ class RscpClient:
 
             requests.extend(self.__storage.get_rscp_tags())
             self.__create_rscp_tags_for_sgready(requests)
-            requests.append(self.__create_rscp_tags_for_inverter(0))
+
             for wallbox in self.__wallboxes:
                 requests.extend(wallbox.get_rscp_tags())
             # transfer data and wait for response
@@ -177,8 +135,6 @@ class RscpClient:
                 if self.__storage.handle_rscp_data(value):
                     continue
 
-                if value.getTagName() == "TAG_PVI_DATA":
-                    result_values.update(self.__extract_pvi_data(value))
                 elif value.getTagName() == "TAG_WB_DATA":
                     for wallbox in self.__wallboxes:
                         wallbox.handle_rscp_data(

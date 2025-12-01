@@ -4,7 +4,7 @@ import logging
 
 from ..e3dc.RscpValue import RscpValue  # noqa: TID252
 from .RscpModelInterface import RscpModelInterface
-from .StorageDataModel import StorageDataModel
+from .StorageDataModel import PvInverterData, StorageDataModel
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +26,7 @@ class StorageRscpModel(RscpModelInterface):
             mac_addr=mac_addr,
             sw_version=sw_version,
         )
+        self.__pvi_identified = False
 
     def get_model(self):
         "Returns the model data."
@@ -54,6 +55,7 @@ class StorageRscpModel(RscpModelInterface):
         requests.append(
             RscpValue().withTagName("TAG_INFO_REQ_ASSEMBLY_SERIAL_NUMBER", None)
         )
+
         return requests
 
     @staticmethod
@@ -92,13 +94,27 @@ class StorageRscpModel(RscpModelInterface):
             )
         return None
 
+    def __get_ident_tags_for_pvi(self):
+        _list = []
+        for index in range(7):
+            _list.extend(self.__create_rscp_tags_for_inverter(index))
+        return _list
+
     def get_rscp_tags(self) -> list[RscpValue]:
         """Returns all tags used to get informations from device!
 
         The client will call this funciton to get the tags, send them out and passes the
         answer into handle_rscp_data where it is extracted.
         """
-        tags = self.__create_rscp_tags_for_ems()
+        tags = []
+
+        tags.extend(self.__create_rscp_tags_for_ems())
+        if not self.__pvi_identified:
+            tags.extend(self.__get_ident_tags_for_pvi())
+            self.__pvi_identified = True
+        else:
+            for x in self.__model.inverters:
+                tags.extend(self.__create_rscp_tags_for_inverter(x))
         return tags
 
     def get_rscp_tags_slow(self) -> list[RscpValue]:
@@ -118,6 +134,8 @@ class StorageRscpModel(RscpModelInterface):
         """
         if container.getTagName().startswith("TAG_EMS_"):
             return self.__handle_rcsp_tags_for_ems(container)
+        if container.getTagName() == "TAG_PVI_DATA":
+            return self.__hanlde_rscp_tags_for_pvi(container)
         return False
 
     def __create_rscp_tags_for_ems(self):
@@ -163,6 +181,70 @@ class StorageRscpModel(RscpModelInterface):
         if value.getTagName() == "TAG_EMS_EMERGENCY_POWER_STATUS":
             self.__model.emergency_power_state = value.getValue()
             return True
+
         return False
         # else:
         #    _LOGGER.warning("Received unknown EMS tag: %s", value.getTagName())
+
+    def __create_rscp_tags_for_inverter(self, index: int) -> list[RscpValue]:
+        return [
+            RscpValue.construct_rscp_value(
+                "TAG_PVI_REQ_DATA",
+                [
+                    ("TAG_PVI_INDEX", index),
+                    # ("TAG_PVI_REQ_AC_POWER", 0),
+                    # ("TAG_PVI_REQ_AC_POWER", 1),
+                    # ("TAG_PVI_REQ_AC_POWER", 2),
+                    # ("TAG_PVI_REQ_AC_VOLTAGE", 0),
+                    # ("TAG_PVI_REQ_AC_VOLTAGE", 1),
+                    # ("TAG_PVI_REQ_AC_VOLTAGE", 2),
+                    ("TAG_PVI_REQ_DC_POWER", 0),
+                    ("TAG_PVI_REQ_DC_POWER", 1),
+                    ("TAG_PVI_REQ_DC_POWER", 2),
+                ],
+            )
+        ]
+
+    def __hanlde_rscp_tags_for_pvi(self, container: RscpValue) -> bool:
+        pvi_index = container.get_child("TAG_PVI_INDEX")
+        if pvi_index is None:
+            # check if we ever run into this area!!
+
+            value = container.get_child("TAG_PVI_REQ_INDEX")
+            if value is not None:
+                logger.critical(
+                    "No TAG_PVI_REQ_INDEX in container, errorcode: %d", value.getValue()
+                )
+            return False
+
+        pvi_index = pvi_index.getValue()
+
+        error = container.get_child("TAG_PVI_REQ_DATA")
+        if error is not None:
+            logger.warning(
+                "No data for inverter: %d, errorcode: %d",
+                pvi_index,
+                error.getValue(),
+            )
+            # even if we detected an error, means we handled this tag ;)
+            return True
+
+        # get corresponding inverter model
+        inverter = self.__model.inverters.get(pvi_index, None)
+
+        if inverter is None:
+            inverter = PvInverterData()
+            self.__model.inverters[pvi_index] = inverter
+            logger.warning("Added inverter on index %d to storage", pvi_index)
+
+        dc_power_tags = container.get_childs("TAG_PVI_DC_POWER")
+        for tag in dc_power_tags:
+            mppt_index = tag.get_child("TAG_PVI_INDEX")
+            if mppt_index is not None:
+                mppt_index = mppt_index.getValue()
+                power_value = tag.get_child("TAG_PVI_VALUE")
+                inverter.power_mppt[mppt_index] = (
+                    power_value.getValue() if power_value is not None else None
+                )
+
+        return True
