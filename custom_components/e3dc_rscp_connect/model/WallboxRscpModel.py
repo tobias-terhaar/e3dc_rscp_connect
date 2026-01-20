@@ -26,6 +26,16 @@ class WallboxRscpModel(RscpModelInterface):
         self.__model.device_name = device_name
         self.__model.firmware_version = firmware_version
 
+    def __eq__(self, other):
+        "Comparing two WallboxRscpModeöl instances."
+        if not isinstance(other, WallboxRscpModel):
+            return NotImplemented
+        return self.serial == other.serial
+
+    def __hash__(self):
+        "Hashing the serial for comparisation."
+        return hash(self.serial)
+
     def get_model(self) -> WallboxDataModel:
         "Returns the data model."
         return self.__model
@@ -33,6 +43,12 @@ class WallboxRscpModel(RscpModelInterface):
     @property
     def index(self) -> int:
         return self.__index
+
+    @property
+    def serial(self) -> str:
+        if self.__model == None:
+            return ""
+        return self.__model.serial
 
     @staticmethod
     def get_identification_tags() -> list[RscpValue]:

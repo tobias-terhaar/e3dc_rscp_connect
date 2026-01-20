@@ -38,10 +38,10 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         )
 
         self.__last_device_info_update: datetime | None = None
-        self.__device_info_interval = timedelta(minutes=5)
+        self.__device_info_interval = timedelta(minutes=60)
 
         __update_interval = current.get("update_interval", 10)
-
+        _LOGGER.info("Starting coordinator with update interval: %d", __update_interval)
         super().__init__(
             hass,
             _LOGGER,
