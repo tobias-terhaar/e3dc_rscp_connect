@@ -6,12 +6,11 @@ from .e3dc.RscpConnection import RscpConnection
 from .e3dc.RscpEncryption import RscpEncryption
 from .e3dc.RscpFrame import RscpFrame
 from .e3dc.RscpValue import RscpValue
-from .model.StorageRscpModel import StorageRscpModel
-from .model.WallboxRscpModel import WallboxRscpModel
-from .model.WallboxDataModel import WallboxDataModel
-from .model.SgReadyRscpModel import SgReadyRscpModel
-
 from .model.RscpHandlerPipeline import RscpHandlerPipeline
+from .model.SgReadyRscpModel import SgReadyRscpModel
+from .model.StorageRscpModel import StorageRscpModel
+from .model.WallboxDataModel import WallboxDataModel
+from .model.WallboxRscpModel import WallboxRscpModel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +74,7 @@ class RscpClient:
 
     def __add_identified_storage(self, storage):
         def set_storage(self, storage):
+            _LOGGER.info("Set identified storage: %s!", storage.ident_serial)
             self.__storage = storage
             self.__handlerPipeline.add_handler(storage)
 
@@ -86,10 +86,42 @@ class RscpClient:
             set_storage(self, storage)
             return
 
-        if storage.ident_serial == self.__storage.ident_serial:
+        if storage == self.__storage:
             _LOGGER.info("Re-Identified storage: %s!", storage.ident_serial)
         else:
             set_storage(self, storage)
+
+    def __add_identified_sg_ready(self, sg_ready):
+        def set_sg_ready(self, sg_ready):
+            _LOGGER.info("Set identified sg ready!")
+            self.__sg_ready = sg_ready
+            self.__handlerPipeline.add_handler(sg_ready)
+
+        if sg_ready is None:
+            _LOGGER.warning("Can't set sg_ready to None!")
+            return
+
+        if self.__storage is None:
+            set_sg_ready(self, sg_ready)
+            return
+
+        if sg_ready == self.__sg_ready:
+            _LOGGER.info("Re-Identified sg_ready!")
+        else:
+            set_sg_ready(self, sg_ready)
+
+    def __add_indentified_wallbox(self, wallbox: WallboxRscpModel):
+        # sanity checks:
+        if wallbox is None:
+            return
+
+        if wallbox in self.__wallboxes:
+            _LOGGER.info("Re-Identified wallbox: %s", wallbox.serial)
+            return
+
+        _LOGGER.info("Identified wallbox: %s", wallbox.serial)
+        self.__wallboxes.append(wallbox)
+        self.__handlerPipeline.add_handler(wallbox)
 
     async def identify_device(self) -> dict:
         "Reads serial number and firmware version from device."
@@ -98,7 +130,7 @@ class RscpClient:
                 _LOGGER.info("Not connected, try to reconnect!")
                 await self._connect_and_login()
 
-            self.__wallboxes.clear()
+            # self.__wallboxes.clear()
 
             requests = []
             requests.extend(StorageRscpModel.get_identification_tags())
@@ -107,7 +139,7 @@ class RscpClient:
 
             received_values = await self.send_and_receive(requests)
             for x in received_values:
-                _LOGGER.info(f"received identification: {x.toString()}")
+                _LOGGER.info("Received identification: %s", x.toString())
             # TODO read serial number and firmware from wallbox and add data to coordinator *and* to device_info
             #
             for value in received_values:
@@ -115,17 +147,17 @@ class RscpClient:
 
                 if storage is not None:
                     self.__add_identified_storage(storage)
+                    continue
 
                 wallbox = WallboxRscpModel.identify(value)
                 if wallbox is not None:
-                    self.__wallboxes.append(wallbox)
-                    self.__handlerPipeline.add_handler(wallbox)
+                    self.__add_indentified_wallbox(wallbox)
                     continue
 
                 sg_ready = SgReadyRscpModel.identify(value)
                 if sg_ready is not None:
-                    self.__sg_ready = sg_ready
-                    self.__handlerPipeline.add_handler(sg_ready)
+                    self.__add_identified_sg_ready(sg_ready)
+                    continue
 
         except ConnectionError as err:
             raise Exception(f"Error: {err}") from err
@@ -145,7 +177,7 @@ class RscpClient:
         recv_buffer = await self.client.receive()
 
         if recv_buffer is None:
-            _LOGGER.warn("recv buffer is None, decryption failure???")
+            _LOGGER.wagning("Recv buffer is None, decryption failure???")
             return []
 
         recvd_frame_length = RscpFrame.getFrameLength(recv_buffer)
@@ -170,12 +202,11 @@ class RscpClient:
             return tag_value.getValue()
         return None
 
-    async def fetch_data(self):
-        "Creates RSCP frames and send it to the device, to fetch updated data!"
-        result_values = {}
+    async def _fetch_data(self):
+        _LOGGER.debug("Fetch data")
         try:
             if not self.client.is_connected():
-                _LOGGER.info("Not connected, try to reconnect!")
+                _LOGGER.debug("Not connected, try to reconnect!")
                 await self._connect_and_login()
 
             requests = await self.__handlerPipeline.collect_tags()
@@ -194,4 +225,9 @@ class RscpClient:
             # TODO make Exception more specific
             raise Exception("Error during data fetch: {err}") from err
 
+    async def fetch_data(self):
+        "Creates RSCP frames and send it to the device, to fetch updated data!"
+        result_values = {}
+        _LOGGER.debug("Grab data from fetch_data")
+        await self._fetch_data()
         return result_values

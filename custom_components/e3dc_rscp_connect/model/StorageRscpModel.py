@@ -28,6 +28,16 @@ class StorageRscpModel(RscpModelInterface):
         )
         self.__pvi_identified = False
 
+    def __eq__(self, other):
+        "Comparing two StorageRscpModel instances."
+        if not isinstance(other, StorageRscpModel):
+            return NotImplemented
+        return self.ident_serial == other.ident_serial
+
+    def __hash__(self):
+        "Hashing the serial for comparisation."
+        return hash(self.serial)
+
     def get_model(self):
         "Returns the model data."
         return self.__model

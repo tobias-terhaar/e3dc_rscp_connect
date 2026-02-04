@@ -35,4 +35,7 @@ class WallboxPowerSensor(E3dcConnectEntity, SensorEntity):
     def native_value(self):
         """Returns the power value."""
         wallbox = self.coordinator.get_wallbox(self._index)
+        if wallbox is None:
+            return None
+
         return wallbox.assigned_power
