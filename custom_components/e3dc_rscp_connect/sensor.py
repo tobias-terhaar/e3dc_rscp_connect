@@ -6,7 +6,6 @@ from homeassistant.core import HomeAssistant
 
 from . import const
 from .coordinator import E3dcRscpCoordinator
-from .model.StorageDataModel import DeviceState
 from .entities import (
     CpStateSensor,
     DeviceStateSensor,
@@ -18,6 +17,7 @@ from .entities import (
     StateOfChargeSensor,
     WallboxPowerSensor,
 )
+from .model.StorageDataModel import DeviceState
 
 DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +49,12 @@ async def async_setup_entry(
             "Home Power",
             data_getter=lambda: coordinator.storage.powers.home,
         ),
-        EnergySensor(coordinator, config_entry, "Home Consumption", "home_power"),
+        EnergySensor(
+            coordinator,
+            config_entry,
+            "Home Consumption",
+            data_getter=lambda: coordinator.storage.powers.home,
+        ),
         #
         # grid sensors
         PowerSensor(
