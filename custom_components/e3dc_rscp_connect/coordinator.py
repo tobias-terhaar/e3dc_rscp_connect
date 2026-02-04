@@ -2,6 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 import logging
+import time
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -86,13 +87,19 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         return self.client.get_wallbox(index)
 
     async def _async_update_data(self):
+        starttime = time.time()
+        data = {}
         try:
             if self.__device_info_need_update():
                 await self.__update_device_info()
-            return await self.client.fetch_data()
+            data = await self.client.fetch_data()
         except Exception as err:
             _LOGGER.exception("Exception in update_data:")
             raise UpdateFailed(f"Fehler beim Abrufen: {err}") from err
+        else:
+            duration = time.time() - starttime
+            _LOGGER.debug("duration of update_data: %.3f seconds", duration)
+            return data
 
     async def set_sun_mode(self, wallbox_id: int, value: bool):
         "Uses the client implementation to change the sun mode."

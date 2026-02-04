@@ -1,5 +1,7 @@
 """e3dc_rscp_connect is a home assistant integration to provide data connector to E3DC storage systems."""
 
+import logging
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -9,6 +11,9 @@ from .coordinator import E3dcRscpCoordinator
 from .e3dc.RscpConnection import RscpConnectionException
 
 DOMAIN = const.DOMAIN
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -30,11 +35,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.config_entries.async_forward_entry_setups(entry, ["sensor", "select"])
     )
 
+    _LOGGER.debug("Setup done for entry id: %s", entry.entry_id)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     "Used to perpare unloading of the integration."
+    _LOGGER.debug("Unloading entry: %s", entry.entry_id)
+
+    data = hass.data[DOMAIN][entry.entry_id]
+    coordinator = data["coordinator"]
+    coordinator.client.client.disconnect()
+
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, ["sensor", "select"]
     )

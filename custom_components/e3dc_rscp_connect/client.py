@@ -6,12 +6,11 @@ from .e3dc.RscpConnection import RscpConnection
 from .e3dc.RscpEncryption import RscpEncryption
 from .e3dc.RscpFrame import RscpFrame
 from .e3dc.RscpValue import RscpValue
-from .model.StorageRscpModel import StorageRscpModel
-from .model.WallboxRscpModel import WallboxRscpModel
-from .model.WallboxDataModel import WallboxDataModel
-from .model.SgReadyRscpModel import SgReadyRscpModel
-
 from .model.RscpHandlerPipeline import RscpHandlerPipeline
+from .model.SgReadyRscpModel import SgReadyRscpModel
+from .model.StorageRscpModel import StorageRscpModel
+from .model.WallboxDataModel import WallboxDataModel
+from .model.WallboxRscpModel import WallboxRscpModel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,7 +139,7 @@ class RscpClient:
 
             received_values = await self.send_and_receive(requests)
             for x in received_values:
-                _LOGGER.info(f"received identification: {x.toString()}")
+                _LOGGER.info("Received identification: %s", x.toString())
             # TODO read serial number and firmware from wallbox and add data to coordinator *and* to device_info
             #
             for value in received_values:
@@ -178,7 +177,7 @@ class RscpClient:
         recv_buffer = await self.client.receive()
 
         if recv_buffer is None:
-            _LOGGER.warn("recv buffer is None, decryption failure???")
+            _LOGGER.wagning("Recv buffer is None, decryption failure???")
             return []
 
         recvd_frame_length = RscpFrame.getFrameLength(recv_buffer)
@@ -203,12 +202,11 @@ class RscpClient:
             return tag_value.getValue()
         return None
 
-    async def fetch_data(self):
-        "Creates RSCP frames and send it to the device, to fetch updated data!"
-        result_values = {}
+    async def _fetch_data(self):
+        _LOGGER.debug("Fetch data")
         try:
             if not self.client.is_connected():
-                _LOGGER.info("Not connected, try to reconnect!")
+                _LOGGER.debug("Not connected, try to reconnect!")
                 await self._connect_and_login()
 
             requests = await self.__handlerPipeline.collect_tags()
@@ -227,4 +225,9 @@ class RscpClient:
             # TODO make Exception more specific
             raise Exception("Error during data fetch: {err}") from err
 
+    async def fetch_data(self):
+        "Creates RSCP frames and send it to the device, to fetch updated data!"
+        result_values = {}
+        _LOGGER.debug("Grab data from fetch_data")
+        await self._fetch_data()
         return result_values
