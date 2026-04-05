@@ -19,14 +19,16 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
         wallbox: WallboxDataModel,
     ) -> None:
         "Init the sensor."
+
         super().__init__(coordinator, entry, "Wallbox", wallbox_id)
         self._entry = entry
         self.coordinator = coordinator
+        self._index = wallbox_id
 
-        self._attr_name = "Ladestatus"
+        self._attr_name = "Wallbox Status"
         serial = coordinator.storage.serial.lower().replace("-", "_")
         wallbox_name = wallbox.device_name.lower().replace(" ", "_")
-        self._attr_unique_id = f"{serial}_{wallbox_name}_charge_state"
+        self._attr_unique_id = f"{serial}_{wallbox_name}_wallbox_state"
 
         self._attr_device_class = SensorDeviceClass.ENUM
         self._attr_translation_key = "wallbox_status"
@@ -40,9 +42,8 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
     @property
     def native_value(self):
         "Get the data."
-        wallbox: WallboxDataModel = self.coordinator.data.get(
-            f"wallbox_{self._sub_device_index}"
-        )
+        wallbox: WallboxDataModel = self.coordinator.get_wallbox(self._index)
+
         if not wallbox:
             return None
         cp_state = wallbox.cp_state
@@ -54,4 +55,4 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
             "F": "error",
         }
 
-        return states.get(cp_state, None)
+        return states.get(cp_state)
