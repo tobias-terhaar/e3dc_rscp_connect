@@ -16,16 +16,21 @@ class WallboxPowerSensor(E3dcConnectEntity, SensorEntity):
         coordinator: E3dcRscpCoordinator,
         entry,
         name: str,
-        index: int,
+        index,
+        data_getter,
     ) -> None:
         """Inits the PowerSensor with a location. The location is used to create the attribute name and the unique id."""
         super().__init__(coordinator, entry, "Wallbox", index)
         self._attr_name = name
-
+        self.__data_getter = data_getter
         serial = coordinator.storage.serial.lower().replace("-", "_")
+
         name = name.lower().replace(" ", "_")
 
-        self._attr_unique_id = f"{serial}_{name}_{index}_assigned_power"
+        wallbox = coordinator.get_wallbox(index)
+        wallbox_name = wallbox.device_name.lower().replace(" ", "_")
+
+        self._attr_unique_id = f"{serial}_{wallbox_name}_{index}_{name}"
 
         self._attr_native_unit_of_measurement = UnitOfPower.WATT
         self._attr_device_class = SensorDeviceClass.POWER
@@ -34,8 +39,5 @@ class WallboxPowerSensor(E3dcConnectEntity, SensorEntity):
     @property
     def native_value(self):
         """Returns the power value."""
-        wallbox = self.coordinator.get_wallbox(self._index)
-        if wallbox is None:
-            return None
 
-        return wallbox.assigned_power
+        return self.__data_getter()

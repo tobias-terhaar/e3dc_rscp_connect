@@ -99,12 +99,15 @@ class WallboxRscpModel(RscpModelInterface):
                     ("TAG_WB_REQ_PARAMETER_LIST", 1),
                     ("TAG_WB_REQ_ACTIVE_CHARGE_STRATEGY", None),
                     ("TAG_WB_REQ_ASSIGNED_POWER", None),
-                    # ("TAG_WB_REQ_POWER", None),
+                    ("TAG_WB_REQ_PM_POWER_L1", None),
+                    ("TAG_WB_REQ_PM_POWER_L2", None),
+                    ("TAG_WB_REQ_PM_POWER_L3", None),
                     ("TAG_WB_REQ_DEVICE_STATE", None),
                     ("TAG_WB_REQ_SUN_MODE_ACTIVE", None),
-                    # "TAG_WB_REQ_SET_ABORT_CHARGING"
-                    # "TAG_WB_REQ_SET_STATION_ENABLED"
-                    # "TAG_WB_REQ_SET_STATION_AVAILABLE",
+                    ("TAG_WB_REQ_UPPER_CURRENT_LIMIT", None),
+                    ("TAG_WB_REQ_LOWER_CURRENT_LIMIT", None),
+                    ("TAG_WB_REQ_MAX_CHARGE_CURRENT", None),
+                    ("TAG_WB_REQ_MIN_CHARGE_CURRENT", None),
                 ],
             )
         ]
@@ -148,15 +151,50 @@ class WallboxRscpModel(RscpModelInterface):
                 x.getValue() for x in assigned_power_container.getValue()
             )
 
-        power_container = container.get_child("TAG_WB_POWER")
-        if power_container:
-            logger.debug("WB POWER: %s", power_container.toString())
-            self.__model.power = sum(x.getValue() for x in power_container.getValue())
+        self.__model.power = self.__extract_power_from_wb_data(container)
+
+        # power_container = container.get_child("TAG_WB_REQ_AVAILABLE_SOLAR_POWER")
+        # if power_container:
+        #     logger.debug("WB available solar power: %s", power_container.toString())
+        #     self.__model.available_solar_power = sum(
+        #         x.getValue() for x in power_container.getValue()
+        #     )
 
         value = container.get_child("TAG_WB_SUN_MODE_ACTIVE")
         self.__model.sun_mode = value.getValue() if value is not None else None
 
+        value = container.get_child("TAG_WB_UPPER_CURRENT_LIMIT")
+        self.__model.currents.upper_limit = value.getValue() if value is not None else 0
+
+        value = container.get_child("TAG_WB_LOWER_CURRENT_LIMIT")
+        self.__model.currents.lower_limit = value.getValue() if value is not None else 0
+
+        value = container.get_child("TAG_WB_MAX_CHARGE_CURRENT")
+        self.__model.currents.max = value.getValue() if value is not None else 0
+
+        value = container.get_child("TAG_WB_MIN_CHARGE_CURRENT")
+        self.__model.currents.min = value.getValue() if value is not None else 0
+
         return True
+
+    def __extract_power_from_wb_data(self, wb_data: RscpValue) -> int:
+        power_total = 0
+        power_l1 = wb_data.get_child("TAG_WB_PM_POWER_L1")
+        if power_l1:
+            logger.debug("WB POWER L1: %s", power_l1.toString())
+            power_total += power_l1.getValue()
+
+        power_l2 = wb_data.get_child("TAG_WB_PM_POWER_L3")
+        if power_l2:
+            logger.debug("WB POWER L2: %s", power_l2.toString())
+            power_total += power_l2.getValue()
+
+        power_l3 = wb_data.get_child("TAG_WB_PM_POWER_L3")
+        if power_l3:
+            logger.debug("WB POWER: L3: %s", power_l3.toString())
+            power_total += power_l3.getValue()
+
+        return power_total
 
     async def get_sun_mode_request(self, value: bool, send_and_receive):
         """Sends a sun mode set request to the storage."""
