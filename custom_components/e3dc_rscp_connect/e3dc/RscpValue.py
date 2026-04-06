@@ -240,7 +240,9 @@ class RscpValue:
                 data = tag_code, type_identifier, data_length, self.__value.encode()
             elif type_name == "Container":
                 if not isinstance(self.__value, list):
-                    raise ValueError("container requires list of RscpValues as value")
+                    raise ValueError(
+                        f"container requires list of RscpValues as value for tag: {self.__tagname}"
+                    )
 
                 containerdata = b""
                 for value in self.__value:

@@ -177,7 +177,7 @@ class RscpClient:
         recv_buffer = await self.client.receive()
 
         if recv_buffer is None:
-            _LOGGER.wagning("Recv buffer is None, decryption failure???")
+            _LOGGER.warning("Recv buffer is None, decryption failure???")
             return []
 
         recvd_frame_length = RscpFrame.getFrameLength(recv_buffer)

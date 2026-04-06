@@ -29,7 +29,10 @@ class RscpHandlerPipeline:
                     break
 
             if not handled:
-                _LOGGER.warning("Unhandled RSCP tag: %s", value.getTagName())
+                _LOGGER.warning(
+                    "Unhandled RSCP tag: %s Handlers: %d",
+                    value.getTagName(),
+                )
 
     async def collect_tags(self) -> list[RscpValue]:
         """Collect rscp tags from all registered handlers."""
