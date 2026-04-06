@@ -4,6 +4,7 @@ import logging
 
 from homeassistant.core import HomeAssistant
 
+# from homeassistant.helpers
 from . import const
 from .coordinator import E3dcRscpCoordinator
 from .entities import (
@@ -209,7 +210,21 @@ async def async_setup_entry(
         ],
         *[
             WallboxPowerSensor(
-                coordinator, config_entry, "Zugewiesene Leistung", wallbox.index
+                coordinator,
+                config_entry,
+                "Assigned power",
+                wallbox.index,
+                lambda wallbox=wallbox: wallbox.assigned_power,
+            )
+            for wallbox in coordinator.wallboxes
+        ],
+        *[
+            WallboxPowerSensor(
+                coordinator,
+                config_entry,
+                "Current power",
+                wallbox.index,
+                lambda wallbox=wallbox: wallbox.power,
             )
             for wallbox in coordinator.wallboxes
         ],
