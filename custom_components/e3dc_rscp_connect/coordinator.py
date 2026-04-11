@@ -104,3 +104,11 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
     async def set_sun_mode(self, wallbox_id: int, value: bool):
         "Uses the client implementation to change the sun mode."
         await self.client.send_set_sun_mode_request(wallbox_id, value)
+
+    async def set_max_charge_current(self, wallbox_id: int, value: int):
+        "Uses the client implementation to change the max charge current."
+        await self.client.send_set_max_charge_current(wallbox_id, value)
+
+    async def set_min_charge_current(self, wallbox_id: int, value: int):
+        "Uses the client implementation to change the min charge current."
+        await self.client.send_set_min_charge_current(wallbox_id, value)

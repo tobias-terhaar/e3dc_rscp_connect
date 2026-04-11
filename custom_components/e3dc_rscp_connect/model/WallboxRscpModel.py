@@ -204,3 +204,21 @@ class WallboxRscpModel(RscpModelInterface):
             [("TAG_WB_INDEX", self.__index), ("TAG_WB_REQ_SET_SUN_MODE_ACTIVE", value)],
         )
         await send_and_receive(request)
+
+    async def set_max_charge_current_request(self, value: int, send_and_receive):
+        """Sends a set max charge current request to the wallbox."""
+
+        request = RscpValue.construct_rscp_value(
+            "TAG_WB_REQ_DATA",
+            [("TAG_WB_INDEX", self.__index), ("TAG_WB_REQ_SET_MAX_CHARGE_CURRENT", value)],
+        )
+        await send_and_receive(request)
+
+    async def set_min_charge_current_request(self, value: int, send_and_receive):
+        """Sends a set min charge current request to the wallbox."""
+
+        request = RscpValue.construct_rscp_value(
+            "TAG_WB_REQ_DATA",
+            [("TAG_WB_INDEX", self.__index), ("TAG_WB_REQ_SET_MIN_CHARGE_CURRENT", value)],
+        )
+        await send_and_receive(request)

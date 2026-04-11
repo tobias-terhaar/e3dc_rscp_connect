@@ -195,6 +195,20 @@ class RscpClient:
         if wallbox is not None:
             await wallbox.get_sun_mode_request(value, self.send_and_receive)
 
+    async def send_set_max_charge_current(self, index: int, value: int):
+        """Sends a set max charge current request to the wallbox."""
+
+        wallbox = self._get_wallbox(index)
+        if wallbox is not None:
+            await wallbox.set_max_charge_current_request(value, self.send_and_receive)
+
+    async def send_set_min_charge_current(self, index: int, value: int):
+        """Sends a set min charge current request to the wallbox."""
+
+        wallbox = self._get_wallbox(index)
+        if wallbox is not None:
+            await wallbox.set_min_charge_current_request(value, self.send_and_receive)
+
     def __get_value_for_path(self, path, rscp_value: RscpValue):
         "Returns the value for the given path, or None if path not found."
         tag_value = RscpValue.get_tag_by_path([rscp_value], path)
