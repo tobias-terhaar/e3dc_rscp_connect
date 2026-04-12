@@ -1,5 +1,6 @@
 "Client which uses RscpConnections to E3DC storage devices."
 
+import asyncio
 import logging
 
 from .e3dc.RscpConnection import RscpConnection
@@ -29,6 +30,7 @@ class RscpClient:
         self.__sg_ready = None
         self.__wallboxes = []
         self.__handlerPipeline = RscpHandlerPipeline()
+        self.__lock = asyncio.Lock()
 
     @property
     def wallboxes(self):
@@ -172,21 +174,23 @@ class RscpClient:
 
         Packs a list of RscpValues into a frame and send it to the device.
         The answer of the device is returned as list of RscpValues.
+        Serialized via a lock because the protocol is strictly request/response.
         """
-        await self.client.send(RscpFrame().packFrame(rscpValuesToSend))
-        recv_buffer = await self.client.receive()
+        async with self.__lock:
+            await self.client.send(RscpFrame().packFrame(rscpValuesToSend))
+            recv_buffer = await self.client.receive()
 
-        if recv_buffer is None:
-            _LOGGER.wagning("Recv buffer is None, decryption failure???")
-            return []
+            if recv_buffer is None:
+                _LOGGER.warning("Recv buffer is None, decryption failure???")
+                return []
 
-        recvd_frame_length = RscpFrame.getFrameLength(recv_buffer)
+            recvd_frame_length = RscpFrame.getFrameLength(recv_buffer)
 
-        frame = RscpFrame()
-        if len(recv_buffer) > recvd_frame_length:
-            frame.unpack(recv_buffer[0:recvd_frame_length])
+            frame = RscpFrame()
+            if len(recv_buffer) > recvd_frame_length:
+                frame.unpack(recv_buffer[0:recvd_frame_length])
 
-        return frame.getRscpValues()
+            return frame.getRscpValues()
 
     async def send_set_sun_mode_request(self, index: int, value: bool):
         """Sends a sun mode set request to the storage."""
@@ -230,10 +234,10 @@ class RscpClient:
                 _LOGGER.warning(
                     "Received no values from device: %s for tags: %s",
                     getattr(self.__storage, "serial", None),
-                    requests,
+                    " ".join([request.getTagName() for request in requests]),
                 )
-
-            await self.__handlerPipeline.process(received_values)
+            else:
+                await self.__handlerPipeline.process(received_values)
 
         except Exception as err:
             # TODO make Exception more specific
