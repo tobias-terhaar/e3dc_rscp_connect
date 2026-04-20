@@ -240,8 +240,8 @@ class RscpClient:
                 await self.__handlerPipeline.process(received_values)
 
         except Exception as err:
-            # TODO make Exception more specific
-            raise Exception("Error during data fetch: {err}") from err
+            await self.client.disconnect()
+            raise Exception(f"Error during data fetch: {err}") from err
 
     async def fetch_data(self):
         "Creates RSCP frames and send it to the device, to fetch updated data!"

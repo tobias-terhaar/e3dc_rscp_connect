@@ -16,6 +16,12 @@ class SgReadyRscpModel(RscpModelInterface):
     def __init__(self):
         self.__model = SgReadyDataModel()
 
+    def __eq__(self, other):
+        return isinstance(other, SgReadyRscpModel)
+
+    def __hash__(self):
+        return hash(SgReadyRscpModel)
+
     def get_model(self):
         return self.__model
 
