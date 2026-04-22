@@ -30,6 +30,7 @@ pipenv/
 
 # Testing
 .coverage
+coverage.xml
 htmlcov/
 .tox/
 .nox/
@@ -72,6 +73,9 @@ instance/
 # Environments
 .env
 .env.*
+
+# Local Home Assistant dev runtime (created by scripts/develop)
+/config/
 
 # Mac OS / Linux / Windows system files
 .DS_Store

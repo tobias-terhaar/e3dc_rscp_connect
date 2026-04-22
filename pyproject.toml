@@ -1,0 +1,21 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+
+[tool.coverage.run]
+source = ["custom_components/e3dc_rscp_connect"]
+branch = true
+omit = [
+    "*/__pycache__/*",
+    "tests/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

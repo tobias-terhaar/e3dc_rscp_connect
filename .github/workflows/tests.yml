@@ -22,5 +22,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run pytest
-        run: pytest tests/ -v
+      - name: Run pytest with coverage
+        run: |
+          pytest tests/ \
+            --cov \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-report=html:htmlcov
+
+      - name: Write coverage summary
+        if: always()
+        run: |
+          {
+            echo "## Coverage"
+            echo ""
+            echo '```'
+            python -m coverage report
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
