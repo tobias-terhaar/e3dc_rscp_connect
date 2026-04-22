@@ -1,3 +1,5 @@
+![Tests](https://github.com/tobias-terhaar/e3dc_rscp_connect/actions/workflows/tests.yml/badge.svg)
+
 # E3DC RSCP Connect
 
 A [Home Assistant](https://www.home-assistant.io/) custom integration for **E3/DC** energy storage systems (S10 battery storage). It communicates directly with the device on your local network using the proprietary **RSCP** (Remote Storage Control  Protocol), giving you access to your battery storage, connected wallboxes and power meters — without going through the E3/DC cloud.
