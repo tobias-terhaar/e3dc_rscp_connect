@@ -19,6 +19,7 @@ class MockCoordinator:
         self.data = data or {}
         self._listeners = []
         self.storage = Mock()
+        self.storage.serial = "S10-123456789012"
 
     def async_add_listener(self, callback, context=None):
         self._listeners.append(callback)
@@ -49,7 +50,7 @@ def test_energy_sensor_attributes(coordinator, mock_entry):
     )
 
     assert sensor.name == "Grid Import"
-    assert sensor.unique_id == "e3dc_rscp_connect_energy_grid_import"
+    assert sensor.unique_id == "s10_123456789012_grid_import_energy"
     assert sensor.native_unit_of_measurement == "kWh"
     assert sensor.device_class == "energy"
     assert sensor.state_class == "total_increasing"

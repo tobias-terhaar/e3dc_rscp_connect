@@ -26,7 +26,7 @@ class RscpClient:
         self.client = RscpConnection(
             host, port, RscpEncryption(rscp_key), username, password
         )
-        self.__storage = None
+        self.__storage: StorageRscpModel | None = None
         self.__sg_ready = None
         self.__wallboxes = []
         self.__handlerPipeline = RscpHandlerPipeline()
@@ -213,6 +213,18 @@ class RscpClient:
         if wallbox is not None:
             await wallbox.set_min_charge_current_request(value, self.send_and_receive)
 
+    async def send_battery_remote_power(self, power_w: int):
+        """Sends a battery remote control power setpoint.
+
+        Positive values charge the battery, negative values discharge it.
+        Mode 0 = manual power control.
+        """
+        await self.__storage.send_battery_remote_control(power_w, self.send_and_receive)
+
+    async def disable_remote_control(self):
+        """Disables the remote control of the storage."""
+        await self.__storage.disable_remote_control(self.send_and_receive)
+
     def __get_value_for_path(self, path, rscp_value: RscpValue):
         "Returns the value for the given path, or None if path not found."
         tag_value = RscpValue.get_tag_by_path([rscp_value], path)
@@ -240,7 +252,7 @@ class RscpClient:
                 await self.__handlerPipeline.process(received_values)
 
         except Exception as err:
-            await self.client.disconnect()
+            self.client.disconnect()
             raise Exception(f"Error during data fetch: {err}") from err
 
     async def fetch_data(self):

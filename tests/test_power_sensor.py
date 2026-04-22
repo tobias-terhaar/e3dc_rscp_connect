@@ -20,6 +20,9 @@ class MockCoordinator:
 
     def __init__(self, data=None, storage=None):
         self.data = data or {}
+        if storage is None:
+            storage = Mock()
+            storage.serial = "S10-123456789012"
         self.storage = storage
 
 
@@ -42,7 +45,7 @@ def test_power_sensor_attributes_sensor_value_id(mock_entry):
     )
 
     assert sensor.name == "AC Power"
-    assert sensor.unique_id == "e3dc_rscp_connect_power_ac_power"
+    assert sensor.unique_id == "s10_123456789012_ac_power_power"
     assert sensor.native_unit_of_measurement == UnitOfPower.WATT
     assert sensor.device_class == SensorDeviceClass.POWER
     assert sensor.native_value == 1234
@@ -52,6 +55,7 @@ def test_power_sensor_attributes_data_getter(mock_entry):
     """Test PowerSensor basic attributes and native_value."""
 
     storage = Mock()
+    storage.serial = "S10-123456789012"
     storage.powers.home = 75
     coordinator = MockCoordinator(storage=storage)
 
@@ -63,7 +67,7 @@ def test_power_sensor_attributes_data_getter(mock_entry):
     )
 
     assert sensor.name == "Home Power"
-    assert sensor.unique_id == "e3dc_rscp_connect_power_home_power"
+    assert sensor.unique_id == "s10_123456789012_home_power_power"
     assert sensor.native_unit_of_measurement == UnitOfPower.WATT
     assert sensor.device_class == SensorDeviceClass.POWER
     assert sensor.native_value == 75

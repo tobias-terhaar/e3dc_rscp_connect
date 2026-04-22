@@ -20,6 +20,7 @@ def mock_coordinator():
     """Create a mock coordinator."""
     coordinator = Mock()
     coordinator.data = {}
+    coordinator.storage.serial = "S10-123456789012"
     coordinator.set_sun_mode = AsyncMock()
     coordinator.async_request_refresh = AsyncMock()
     return coordinator
@@ -63,7 +64,7 @@ class TestSunModeSensor:
     ):
         """Test sensor initialization."""
         assert sun_mode_sensor._attr_name == "Lademodus"
-        assert sun_mode_sensor._attr_unique_id == "test_wallbox_sun_mode_state1"
+        assert sun_mode_sensor._attr_unique_id == "s10_123456789012_test_wallbox_sun_mode_state"
         assert sun_mode_sensor.coordinator == mock_coordinator
         assert sun_mode_sensor._entry == mock_entry
         assert sun_mode_sensor._sub_device_index == 0
@@ -81,7 +82,7 @@ class TestSunModeSensor:
         ident = Mock()
         ident.device_name = "My Cool Wallbox"
         sensor = SunModeSensor(mock_coordinator, mock_entry, 0, ident)
-        assert sensor._attr_unique_id == "my_cool_wallbox_sun_mode_state1"
+        assert sensor._attr_unique_id == "s10_123456789012_my_cool_wallbox_sun_mode_state"
 
     def test_current_option_sun_mode_enabled(
         self, sun_mode_sensor, mock_coordinator, mock_wallbox_data
@@ -97,18 +98,18 @@ class TestSunModeSensor:
     ):
         """Test current_option returns 'Mischmodus' when sun_mode is False."""
         mock_wallbox_data.sun_mode = False
-        mock_coordinator.data = {"wallbox_0": mock_wallbox_data}
+        mock_coordinator.get_wallbox.return_value = mock_wallbox_data
 
         assert sun_mode_sensor.current_option == "Mischmodus"
 
     def test_current_option_sun_mode_none(
         self, sun_mode_sensor, mock_coordinator, mock_wallbox_data
     ):
-        """Test current_option returns None when sun_mode is None."""
+        """Test current_option returns 'Unknown' when sun_mode is None."""
         mock_wallbox_data.sun_mode = None
-        mock_coordinator.data = {"wallbox_0": mock_wallbox_data}
+        mock_coordinator.get_wallbox.return_value = mock_wallbox_data
 
-        assert sun_mode_sensor.current_option is None
+        assert sun_mode_sensor.current_option == "Unknown"
 
     def test_current_option_with_different_wallbox_id(
         self, mock_coordinator, mock_entry, mock_wallbox_ident, mock_wallbox_data

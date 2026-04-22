@@ -1,5 +1,6 @@
 "Package initialisation."
 
+from .battery_remote_control import BatteryRemotePowerNumber, BatteryRemoteSwitch
 from .cp_state_sensor import CpStateSensor
 from .device_state_sensor import DeviceStateSensor
 from .device_update_state_sensor import DeviceUpdateStateSensor
@@ -13,6 +14,8 @@ from .wallbox_current_number import WallboxMaxCurrentNumber, WallboxMinCurrentNu
 from .wallbox_power_sensor import WallboxPowerSensor
 
 __all__ = [
+    "BatteryRemotePowerNumber",
+    "BatteryRemoteSwitch",
     "CpStateSensor",
     "DeviceStateSensor",
     "DeviceUpdateStateSensor",

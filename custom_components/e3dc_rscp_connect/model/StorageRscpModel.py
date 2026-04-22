@@ -328,3 +328,41 @@ class StorageRscpModel(RscpModelInterface):
             return True
 
         return False
+
+    async def send_battery_remote_control(self, power_w: int, send_and_receive):
+        """Sends a battery remote control power setpoint via TAG_EMS_REQ_SET_POWER.
+
+        Positive values charge the battery, negative values discharge it.
+        0 values stop the battery charging and discharging!
+
+        """
+        if power_w >= 0:  # charge the battery
+            power_mode = 3
+        else:  # discharge the battery
+            power_mode = 2
+            power_w *= -1
+
+        request = RscpValue.construct_rscp_value(
+            "TAG_EMS_REQ_SET_POWER",
+            [
+                ("TAG_EMS_REQ_SET_POWER_MODE", power_mode),
+                ("TAG_EMS_REQ_SET_POWER_VALUE", power_w),
+            ],
+        )
+        await send_and_receive([request])
+
+    async def disable_remote_control(self, send_and_receive):
+        """Sends a remote control mode AUTO command to the storage.
+
+        This will return to normal operation of the storage!
+
+        """
+
+        request = RscpValue.construct_rscp_value(
+            "TAG_EMS_REQ_SET_POWER",
+            [
+                ("TAG_EMS_REQ_SET_POWER_MODE", 0),
+                ("TAG_EMS_REQ_SET_POWER_VALUE", 0),
+            ],
+        )
+        await send_and_receive([request])

@@ -24,6 +24,7 @@ def mock_entry():
 @pytest.fixture
 def mock_storage():
     storage = Mock()
+    storage.serial = "S10-123456789012"
     return storage
 
 
@@ -44,7 +45,7 @@ def test_state_of_charge_sensor_value(mock_entry, mock_storage) -> None:
     assert sensor._attr_name == "Ladezustand"
     assert sensor._attr_native_unit_of_measurement == "%"
     assert sensor._attr_device_class.value == "battery"
-    assert sensor._attr_unique_id == "e3dc_rscp_connect_ladezustand"
+    assert sensor._attr_unique_id == "s10_123456789012_soc"
 
 
 def test_power_sensor_missing_value(mock_entry, mock_storage) -> None:

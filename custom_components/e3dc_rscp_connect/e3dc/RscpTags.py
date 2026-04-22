@@ -431,7 +431,7 @@ rscpTags = {
     "TAG_EMS_SET_EP_WALLBOX_ENERGY": {"tagvalue": 0x0180002D, "type": "Uint32"},
     "TAG_EMS_GET_EP_WALLBOX_ENERGY": {"tagvalue": 0x0180002E, "type": "Uint32"},
     "TAG_EMS_SET_IDLE_PERIODS_2": {"tagvalue": 0x0180002F, "type": "UChar8"},
-    "TAG_EMS_SET_POWER": {"tagvalue": 0x01800030, "type": "Int32"},
+    "TAG_EMS_SET_POWER": {"tagvalue": 0x01800030, "type": "Int32", "type_variable": True},
     "TAG_EMS_GET_IDLE_PERIODS_2": {"tagvalue": 0x01800033, "type": "Container"},
     "TAG_EMS_SET_IDLE_PERIODS_ENABLE": {"tagvalue": 0x01800034, "type": "Bool"},
     "TAG_EMS_GET_IDLE_PERIODS_ENABLE": {"tagvalue": 0x01800035, "type": "Bool"},

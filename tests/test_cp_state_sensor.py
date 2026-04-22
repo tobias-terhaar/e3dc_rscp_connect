@@ -23,9 +23,20 @@ class MockWallboxIdent:
 
 
 # Mock für den Coordinator mit Daten
+class MockStorage:
+    def __init__(self, serial):
+        self.serial = serial
+
+
 class MockCoordinator:
     def __init__(self, data=None):
         self.data = data or {}
+        storage_data = self.data.get("storage", {})
+        serial = storage_data.get("serial", "") if isinstance(storage_data, dict) else storage_data.serial
+        self.storage = MockStorage(serial)
+
+    def get_wallbox(self, index):
+        return self.data.get(f"wallbox_{index}")
 
 
 @pytest.fixture
@@ -35,7 +46,7 @@ def mock_entry():
 
 def test_cp_state_sensor_attributes(mock_entry) -> None:
     """Test basic attributes of CpStateSensor."""
-    coordinator = MockCoordinator()
+    coordinator = MockCoordinator(data={"storage": {"serial": "S10-123456789012"}})
     wallbox_ident = MockWallboxIdent("Wallbox 1")
 
     sensor = CpStateSensor(
@@ -45,8 +56,8 @@ def test_cp_state_sensor_attributes(mock_entry) -> None:
         wallbox=wallbox_ident,
     )
 
-    assert sensor.name == "Ladestatus"
-    assert sensor.unique_id == "wallbox_1_charge_state"
+    assert sensor.name == "Wallbox Status"
+    assert sensor.unique_id == "s10_123456789012_wallbox_1_wallbox_state"
 
 
 def test_cp_state_sensor_known_states(mock_entry) -> None:
@@ -63,7 +74,7 @@ def test_cp_state_sensor_known_states(mock_entry) -> None:
 
     for code, expected_state in states.items():
         wallbox.cp_state = code
-        coordinator = MockCoordinator(data={data_key: wallbox})
+        coordinator = MockCoordinator(data={data_key: wallbox, "storage": {"serial": "S10-123456789012"}})
         wallbox_ident = MockWallboxIdent("Wallbox 1")
 
         sensor = CpStateSensor(
@@ -79,7 +90,9 @@ def test_cp_state_sensor_known_states(mock_entry) -> None:
 def test_cp_state_sensor_unknown_state(mock_entry) -> None:
     """Test cp_state returns 'Unknown' for undefined state."""
     wallbox = WallboxDataModel(1, cp_state="Z")
-    coordinator = MockCoordinator(data={"wallbox_1": wallbox})
+    coordinator = MockCoordinator(
+        data={"wallbox_1": wallbox, "storage": {"serial": "S10-123456789012"}}
+    )
     wallbox_ident = MockWallboxIdent("Wallbox 1")
 
     sensor = CpStateSensor(
@@ -94,7 +107,7 @@ def test_cp_state_sensor_unknown_state(mock_entry) -> None:
 
 def test_cp_state_sensor_missing_value(mock_entry) -> None:
     """Test behavior when the cp_state key is missing in data."""
-    coordinator = MockCoordinator(data={})
+    coordinator = MockCoordinator(data={"storage": {"serial": "S10-123456789012"}})
     wallbox_ident = MockWallboxIdent("Wallbox 1")
 
     sensor = CpStateSensor(

@@ -20,6 +20,7 @@ def mock_coordinator():
     """Create a mock coordinator."""
     coordinator = Mock()
     coordinator.data = {}
+    coordinator.storage.serial = "S10-123456789012"
     coordinator.sg_ready = Mock()
     return coordinator
 
@@ -44,7 +45,7 @@ class TestSGReadySensor:
     def test_initialization(self, sg_ready_sensor, mock_coordinator, mock_entry):
         """Test sensor initialization."""
         assert sg_ready_sensor._attr_name == "SG Ready Status"
-        assert sg_ready_sensor._attr_unique_id == "sg_ready_state"
+        assert sg_ready_sensor._attr_unique_id == "s10_123456789012_sg_ready_state"
         assert sg_ready_sensor.coordinator == mock_coordinator
         assert sg_ready_sensor._entry == mock_entry
 
