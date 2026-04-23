@@ -3,10 +3,10 @@
 import asyncio
 import logging
 
-from .e3dc.RscpConnection import RscpConnection
-from .e3dc.RscpEncryption import RscpEncryption
-from .e3dc.RscpFrame import RscpFrame
-from .e3dc.RscpValue import RscpValue
+from rscp_lib.RscpConnection import RscpConnection
+from rscp_lib.RscpEncryption import RscpEncryption
+from rscp_lib.RscpFrame import RscpFrame
+from rscp_lib.RscpValue import RscpValue
 from .model.RscpHandlerPipeline import RscpHandlerPipeline
 from .model.SgReadyRscpModel import SgReadyRscpModel
 from .model.StorageRscpModel import StorageRscpModel

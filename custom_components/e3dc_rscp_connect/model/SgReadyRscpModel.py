@@ -2,7 +2,7 @@
 
 import logging
 
-from ..e3dc.RscpValue import RscpValue  # noqa: TID252
+from rscp_lib.RscpValue import RscpValue
 from .RscpModelInterface import RscpModelInterface
 from .SgReadyDataModel import SgReadyDataModel
 

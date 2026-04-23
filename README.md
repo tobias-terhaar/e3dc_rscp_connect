@@ -76,14 +76,13 @@ RscpClient
 
 - **Coordinator** (`coordinator.py`) drives all periodic fetches; entities subscribe through `CoordinatorEntity`.
 - **Handler pipeline** (`model/RscpHandlerPipeline.py`) routes raw RSCP frames to registered device models. Adding a new device type is a matter of implementing `RscpModelInterface` and registering it with the pipeline.
-- **RSCP protocol** (`e3dc/`) — magic `0xDCE3`, timestamp header, variable-length binary frames, tags defined in `e3dc/RscpTags.py`, Rijndael-256 CBC encryption with IV chaining.
+- **RSCP protocol** is provided by the [`rscp_lib`](https://pypi.org/project/rscp_lib/) PyPI package — magic `0xDCE3`, timestamp header, variable-length binary frames, Rijndael-256 CBC encryption with IV chaining.
 
 ### Repository layout
 
 | Path | Purpose |
 |------|---------|
 | `custom_components/e3dc_rscp_connect/` | Integration root |
-| `├─ e3dc/` | RSCP protocol (connection, encryption, framing, tags) |
 | `├─ model/` | Device data models and handler pipeline |
 | `├─ entities/` | Entity base class and sensor / select / number types |
 | `├─ sensor.py`, `select.py`, `number.py`, `switch.py` | HA platform entry points |
@@ -98,7 +97,7 @@ Home Assistant's `hassfest` validator runs automatically on pull requests via `.
 
 ### Dependencies
 
-- [`py3rijndael==0.3.3`](https://pypi.org/project/py3rijndael/) — Rijndael encryption (pinned in `manifest.json`)
+- [`rscp_lib`](https://pypi.org/project/rscp_lib/) — RSCP protocol implementation (connection, encryption, framing, tags); pinned in `manifest.json`, installed by Home Assistant at runtime.
 - `homeassistant` — provided by the Home Assistant runtime
 
 ## Contributing

@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import const
 from .coordinator import E3dcRscpCoordinator
-from .e3dc.RscpConnection import RscpConnectionException
+from rscp_lib.RscpConnection import RscpConnectionException
 
 DOMAIN = const.DOMAIN
 

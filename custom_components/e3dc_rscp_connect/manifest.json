@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://github.com/tobias-terhaar/e3dc_rscp_connect",
   "iot_class": "local_polling",
-  "requirements": ["py3rijndael==0.3.3"],
+  "requirements": ["rscp_lib==1.0.0"],
   "version": "1.0.0"
 }
