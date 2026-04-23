@@ -1,0 +1,76 @@
+{
+    "name": "tobias-terhaar/e3dc_rscp_connect",
+    "image": "mcr.microsoft.com/devcontainers/python:3.13",
+    "workspaceFolder": "/workspaces/e3dc_rscp_connect",
+    "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && bash scripts/setup",
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "configureZshAsDefaultShell": false
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {}
+    },
+    "forwardPorts": [
+        8123,
+        5678
+    ],
+    "portsAttributes": {
+        "8123": {
+            "label": "Home Assistant",
+            "onAutoForward": "notify"
+        },
+        "5678": {
+            "label": "debugpy",
+            "onAutoForward": "silent"
+        }
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "DavidAnson.vscode-markdownlint",
+                "charliermarsh.ruff",
+                "github.vscode-pull-request-github",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ryanluker.vscode-coverage-gutters",
+                "stkb.rewrap",
+                "visualstudioexptteam.vscodeintellicode",
+                "yzhang.markdown-all-in-one"
+            ],
+            "settings": {
+                "editor.formatOnPaste": false,
+                "editor.formatOnSave": true,
+                "editor.formatOnType": true,
+                "editor.tabSize": 4,
+                "files.eol": "\n",
+                "files.trimTrailingWhitespace": true,
+                "markdown.extension.toc.levels": "2..6",
+                "python.analysis.autoSearchPaths": false,
+                "python.pythonPath": "/usr/bin/python3",
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.formatOnSave": true,
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "explicit",
+                        "source.fixAll": "explicit"
+                    }
+                },
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/usr/bin/zsh"
+                    }
+                },
+                "yaml.customTags": [
+                    "!input scalar",
+                    "!secret scalar",
+                    "!include_dir_named scalar",
+                    "!include_dir_list scalar",
+                    "!include_dir_merge_list scalar",
+                    "!include_dir_merge_named scalar"
+                ]
+            }
+        }
+    },
+    "remoteUser": "vscode"
+}

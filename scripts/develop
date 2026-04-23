@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Bootstrap a local Home Assistant config folder that loads this integration.
+if [ ! -d "config" ]; then
+    mkdir -p config
+    hass --config config --script ensure_config
+fi
+
+# Symlink the integration into the HA config so HA picks it up as a custom_component.
+mkdir -p config/custom_components
+ln -sfn "$PWD/custom_components/e3dc_rscp_connect" config/custom_components/e3dc_rscp_connect
+
+# Enable the debugpy integration for VS Code attach, if not already present.
+if ! grep -q "^debugpy:" config/configuration.yaml 2>/dev/null; then
+    printf '\ndebugpy:\n  start: true\n  wait: false\n' >> config/configuration.yaml
+fi
+
+exec hass --config config --debug
