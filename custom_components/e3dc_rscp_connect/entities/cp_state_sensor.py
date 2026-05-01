@@ -1,11 +1,15 @@
 """Implements the charging state sensor for a wallbox."""
 
+import logging
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor.const import SensorDeviceClass
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
 from ..model.WallboxDataModel import WallboxDataModel  # noqa: TID252
 from .entity import E3dcConnectEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CpStateSensor(E3dcConnectEntity, SensorEntity):
@@ -47,12 +51,22 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
         if not wallbox:
             return None
         cp_state = wallbox.cp_state
-
+        _LOGGER.warning(f"CP_State: {cp_state}")
         states = {
             "A": "cable_disconnected",
+            "A1": "cable_disconnected",
             "B": "cable_connected",
+            "B1": "cable_connected",
+            "B2": "cable_connected",
             "C": "charging",
+            "C1": "charging",
+            "C2": "charging",
             "F": "error",
         }
 
-        return states.get(cp_state)
+        state = states.get(cp_state)
+
+        if state is None:
+            _LOGGER.warning(f"unexpected cp state: {cp_state}")
+
+        return state
