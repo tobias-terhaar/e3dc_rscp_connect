@@ -58,6 +58,9 @@ class StorageDataModel:
     # power data
     bat_soc: int | None = None
 
+    autarky: float | None = None
+    self_consumption: float | None = None
+
     emergency_power_state: int | None = None
 
     inverters: dict[int, PvInverterData] = field(default_factory=dict)

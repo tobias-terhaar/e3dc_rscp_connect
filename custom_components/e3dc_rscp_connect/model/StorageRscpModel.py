@@ -162,6 +162,10 @@ class StorageRscpModel(RscpModelInterface):
         requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_WB_ALL", None))
         requests.append(RscpValue().withTagName("TAG_EMS_REQ_POWER_WB_SOLAR", None))
         requests.append(RscpValue().withTagName("TAG_EMS_REQ_BAT_SOC", None))
+        requests.append(RscpValue().withTagName("TAG_EMS_REQ_AUTARKY", None))
+        requests.append(
+            RscpValue().withTagName("TAG_EMS_REQ_SELF_CONSUMPTION", None)
+        )
         requests.append(
             RscpValue().withTagName("TAG_EMS_REQ_EMERGENCY_POWER_STATUS", None)
         )
@@ -194,6 +198,12 @@ class StorageRscpModel(RscpModelInterface):
             return True
         if value.getTagName() == "TAG_EMS_EMERGENCY_POWER_STATUS":
             self.__model.emergency_power_state = value.getValue()
+            return True
+        if value.getTagName() == "TAG_EMS_AUTARKY":
+            self.__model.autarky = value.getValue()
+            return True
+        if value.getTagName() == "TAG_EMS_SELF_CONSUMPTION":
+            self.__model.self_consumption = value.getValue()
             return True
 
         return False

@@ -13,6 +13,7 @@ from .entities import (
     DeviceUpdateStateSensor,
     EmergencyPowerSensor,
     EnergySensor,
+    PercentageSensor,
     PowerSensor,
     SGReadySensor,
     StateOfChargeSensor,
@@ -203,6 +204,18 @@ async def async_setup_entry(
         #     1,
         # ),
         StateOfChargeSensor(coordinator, config_entry),
+        PercentageSensor(
+            coordinator,
+            config_entry,
+            "Autarky",
+            data_getter=lambda: coordinator.storage.autarky,
+        ),
+        PercentageSensor(
+            coordinator,
+            config_entry,
+            "Self Consumption",
+            data_getter=lambda: coordinator.storage.self_consumption,
+        ),
         SGReadySensor(coordinator, config_entry),
         *[
             CpStateSensor(coordinator, config_entry, wallbox.index, wallbox)
