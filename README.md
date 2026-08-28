@@ -2,6 +2,8 @@
 
 # E3DC RSCP Connect
 
+<a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=tobias-terhaar&repository=e3dc_rscp_connect"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open in HACS" /></a>
+
 A [Home Assistant](https://www.home-assistant.io/) custom integration for **E3/DC** energy storage systems (S10 battery storage). It communicates directly with the device on your local network using the proprietary **RSCP** (Remote Storage Control  Protocol), giving you access to your battery storage, connected wallboxes and power meters — without going through the E3/DC cloud.
 
 ## Features
@@ -32,8 +34,12 @@ A [Home Assistant](https://www.home-assistant.io/) custom integration for **E3/D
 
 ### Via HACS (recommended)
 
+Since June 2026 E3DC RSCP Connect has been integrated into the default store of HACS.
+
+One-Click Installation: <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=tobias-terhaar&repository=e3dc_rscp_connect"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open in HACS" /></a>
+
 1. In Home Assistant open **HACS → Integrations**.
-2. Choose **Custom repositories** and add `https://github.com/tobias-terhaar/e3dc_rscp_connect` as type *Integration*.
+2. Search for **E3DC RSCP Connect** 
 3. Install **E3DC RSCP connect** and restart Home Assistant.
 
 ### Manual
