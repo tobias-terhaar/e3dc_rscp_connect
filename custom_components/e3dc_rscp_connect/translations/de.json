@@ -1,5 +1,6 @@
 {
-    "config": {
+  "config": {
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "title": "RSCP Konfiguration",
@@ -11,7 +12,21 @@
           "password": "Passwort",
           "key": "RSCP Verschlüsselungsschlüssel"
         }
+      },
+      "discovery_confirm": {
+        "title": "E3DC Hauskraftwerk gefunden",
+        "description": "Das Hauskraftwerk {name} wurde unter {host}:{port} gefunden. Bitte gib die Zugangsdaten ein, um die Einrichtung abzuschließen.",
+        "data": {
+          "port": "Port",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "key": "RSCP Verschlüsselungsschlüssel"
+        }
       }
+    },
+    "abort": {
+      "already_configured": "Gerät ist bereits konfiguriert",
+      "cannot_connect": "Verbindung fehlgeschlagen"
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",

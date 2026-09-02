@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{name} ({host})",
     "step": {
       "user": {
         "title": "E3DC Configuration",
@@ -11,7 +12,21 @@
           "password": "Password",
           "key": "RSCP Encryption key"
         }
+      },
+      "discovery_confirm": {
+        "title": "E3DC Hauskraftwerk discovered",
+        "description": "Device {name} was discovered at {host}:{port}. Please enter the credentials to complete setup.",
+        "data": {
+          "port": "Port",
+          "username": "Username",
+          "password": "Password",
+          "key": "RSCP Encryption key"
+        }
       }
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Failed to connect"
     },
     "error": {
       "cannot_connect": "Failed to connect",

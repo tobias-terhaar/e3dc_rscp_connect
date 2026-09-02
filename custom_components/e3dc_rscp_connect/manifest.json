@@ -5,11 +5,20 @@
     "@tobias-terhaar"
   ],
   "config_flow": true,
+  "dependencies": [
+    "ssdp"
+  ],
   "documentation": "https://github.com/tobias-terhaar/e3dc_rscp_connect",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/tobias-terhaar/e3dc_rscp_connect/issues",
   "requirements": [
     "rscp_lib==1.0.0"
+  ],
+  "ssdp": [
+    {
+      "manufacturer": "E3DC",
+      "deviceType": "urn:schemas-upnp-org:device:HVAC_System:1"
+    }
   ],
   "version": "1.0.6"
 }
