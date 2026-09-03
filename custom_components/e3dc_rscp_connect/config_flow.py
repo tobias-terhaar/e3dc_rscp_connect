@@ -10,6 +10,11 @@ from defusedxml import ElementTree
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
@@ -17,12 +22,37 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from .const import DEFAULT_PORT, DOMAIN, RSCP_SERVICE_NAME
+from .const import (
+    CONF_HOST,
+    CONF_KEY,
+    CONF_LOGIN_TYPE,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_UPDATE_INTERVAL,
+    CONF_USERNAME,
+    DEFAULT_PORT,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    LOCAL_USERNAME,
+    LOGIN_TYPE_LOCAL,
+    LOGIN_TYPE_PORTAL,
+    RSCP_SERVICE_NAME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 # The device description is a small XML document, no need to wait long for it.
 DESCRIPTION_TIMEOUT = 10
+
+# The login type is part of the credentials form instead of a separate menu
+# step, so it can still be changed when a half finished flow is resumed.
+LOGIN_TYPE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[LOGIN_TYPE_LOCAL, LOGIN_TYPE_PORTAL],
+        translation_key="login_type",
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
 
 
 def parse_rscp_port(xml: str) -> int | None:
@@ -56,6 +86,67 @@ def parse_rscp_port(xml: str) -> int | None:
     return None
 
 
+def credentials_schema(
+    *,
+    include_host: bool,
+    include_port: bool,
+    include_update_interval: bool = False,
+    defaults: dict | None = None,
+) -> vol.Schema:
+    """Build the credentials form.
+
+    The username is only needed for a portal login, so it is optional here and
+    validated by :func:`credentials_errors`.
+    """
+    defaults = defaults or {}
+
+    def key(name: str, fallback=None, marker=vol.Required):
+        default = defaults.get(name, fallback)
+        if default is None:
+            return marker(name)
+        return marker(name, default=default)
+
+    schema: dict = {key(CONF_LOGIN_TYPE, LOGIN_TYPE_LOCAL): LOGIN_TYPE_SELECTOR}
+    if include_host:
+        schema[key(CONF_HOST)] = str
+    if include_port:
+        schema[key(CONF_PORT, DEFAULT_PORT)] = int
+    schema[key(CONF_USERNAME, marker=vol.Optional)] = str
+    schema[key(CONF_PASSWORD)] = str
+    schema[key(CONF_KEY)] = str
+    if include_update_interval:
+        schema[key(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)] = int
+
+    return vol.Schema(schema)
+
+
+def credentials_errors(user_input: dict) -> dict[str, str]:
+    """Validate the submitted credentials, keyed by form field."""
+    if (
+        user_input.get(CONF_LOGIN_TYPE) == LOGIN_TYPE_PORTAL
+        and not (user_input.get(CONF_USERNAME) or "").strip()
+    ):
+        return {CONF_USERNAME: "username_required"}
+
+    return {}
+
+
+def entry_data(user_input: dict) -> dict:
+    """Build the entry data from the submitted form.
+
+    A local login ignores the username field, it always authenticates as
+    ``LOCAL_USERNAME``.
+    """
+    data = dict(user_input)
+    login_type = data.get(CONF_LOGIN_TYPE, LOGIN_TYPE_LOCAL)
+    data[CONF_LOGIN_TYPE] = login_type
+    if login_type == LOGIN_TYPE_LOCAL:
+        data[CONF_USERNAME] = LOCAL_USERNAME
+    else:
+        data[CONF_USERNAME] = (data.get(CONF_USERNAME) or "").strip()
+    return data
+
+
 class E3DCRscpConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for e3dc_rscp_connect integration."""
 
@@ -67,22 +158,22 @@ class E3DCRscpConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_port: int = DEFAULT_PORT
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+        """Handle the manual setup."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            # Optional: Hier könntest du doppelte Konfigurationen verhindern
-            return self.async_create_entry(title=user_input["host"], data=user_input)
+            errors = credentials_errors(user_input)
+            if not errors:
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=entry_data(user_input)
+                )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("host"): str,
-                    vol.Required("port", default=DEFAULT_PORT): int,
-                    vol.Required("username", default="local.user"): str,
-                    vol.Required("password"): str,
-                    vol.Required("key"): str,
-                }
+            data_schema=credentials_schema(
+                include_host=True, include_port=True, defaults=user_input
             ),
+            errors=errors,
         )
 
     async def async_step_ssdp(self, discovery_info: SsdpServiceInfo):
@@ -101,7 +192,7 @@ class E3DCRscpConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={"host": host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._discovered_host = host
         self._discovered_name = discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME, host)
@@ -144,33 +235,33 @@ class E3DCRscpConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return parse_rscp_port(xml)
 
     async def async_step_discovery_confirm(self, user_input=None):
-        """Ask the user for credentials for an SSDP-discovered device."""
+        """Ask for the credentials of an SSDP-discovered device."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            data = {
-                "host": self._discovered_host,
-                "port": self._discovered_port,
-                "username": user_input["username"],
-                "password": user_input["password"],
-                "key": user_input["key"],
-            }
-            return self.async_create_entry(title=self._discovered_name, data=data)
+            errors = credentials_errors(user_input)
+            if not errors:
+                data = entry_data(user_input)
+                data[CONF_HOST] = self._discovered_host
+                data.setdefault(CONF_PORT, self._discovered_port)
+                return self.async_create_entry(title=self._discovered_name, data=data)
 
         return self.async_show_form(
             step_id="discovery_confirm",
-            data_schema=vol.Schema(
-                {
-                    # vol.Required("port", default=self._discovered_port): int,
-                    vol.Required("username", default="local.user"): str,
-                    vol.Required("password"): str,
-                    vol.Required("key"): str,
-                }
+            data_schema=credentials_schema(
+                include_host=False, include_port=False, defaults=user_input
             ),
-            description_placeholders={
-                "name": self._discovered_name or "",
-                "host": self._discovered_host or "",
-                "port": self._discovered_port or "",
-            },
+            description_placeholders=self._discovery_placeholders(),
+            errors=errors,
         )
+
+    def _discovery_placeholders(self) -> dict[str, str]:
+        """Placeholders describing the discovered device."""
+        return {
+            "name": self._discovered_name or "",
+            "host": self._discovered_host or "",
+            "port": str(self._discovered_port),
+        }
 
     @staticmethod
     @callback
@@ -184,26 +275,36 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+        errors: dict[str, str] = {}
 
-        # Aktuelle Werte aus Optionen oder Fallback auf ursprüngliche Konfiguration
-        current = self.config_entry.options or self.config_entry.data
+        if user_input is not None:
+            errors = credentials_errors(user_input)
+            if not errors:
+                return self.async_create_entry(title="", data=entry_data(user_input))
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("host", default=current.get("host", "")): str,
-                    vol.Required(
-                        "port", default=current.get("port", DEFAULT_PORT)
-                    ): int,
-                    vol.Required("username", default=current.get("username", "")): str,
-                    vol.Required("password", default=current.get("password", "")): str,
-                    vol.Required("key", default=current.get("key", "")): str,
-                    vol.Required(
-                        "update_interval", default=current.get("update_interval", "10")
-                    ): int,
-                }
+            data_schema=credentials_schema(
+                include_host=True,
+                include_port=True,
+                include_update_interval=True,
+                defaults=user_input or self._current_values(),
             ),
+            errors=errors,
         )
+
+    @callback
+    def _current_values(self) -> dict:
+        """Current configuration, used as the defaults of the options form."""
+        # Aktuelle Werte aus Optionen oder Fallback auf ursprüngliche Konfiguration
+        current = dict(self.config_entry.options or self.config_entry.data)
+
+        # Entries configured before the login type was stored are recognized by
+        # their username; the fixed local user is never shown in the form.
+        if current.get(CONF_USERNAME) == LOCAL_USERNAME:
+            current.pop(CONF_USERNAME, None)
+            current.setdefault(CONF_LOGIN_TYPE, LOGIN_TYPE_LOCAL)
+        else:
+            current.setdefault(CONF_LOGIN_TYPE, LOGIN_TYPE_PORTAL)
+
+        return current

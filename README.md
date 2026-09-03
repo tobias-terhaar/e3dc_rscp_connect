@@ -7,7 +7,7 @@
 A [Home Assistant](https://www.home-assistant.io/) custom integration for **E3/DC** energy storage systems (S10 battery storage). It communicates directly with the device on your local network using the proprietary **RSCP** (Remote Storage Control  Protocol), giving you access to your battery storage, connected wallboxes and power meters — without going through the E3/DC cloud.
 
 ## Features
-
+- Autodetection of connected storage systems and auto commissioning of all wallboxes connected to the storage system.
 - Local polling over TCP (port `5033`) using Rijndael-256 encrypted RSCP frames — no cloud dependency.
 - Live readings for the main storage system:
   - State of charge, battery power, battery state
@@ -39,7 +39,7 @@ Since June 2026 E3DC RSCP Connect has been integrated into the default store of 
 One-Click Installation: <a href="https://my.home-assistant.io/redirect/hacs_repository/?owner=tobias-terhaar&repository=e3dc_rscp_connect"><img src="https://my.home-assistant.io/badges/hacs_repository.svg" alt="Open in HACS" /></a>
 
 1. In Home Assistant open **HACS → Integrations**.
-2. Search for **E3DC RSCP Connect** 
+2. Search for **E3DC RSCP Connect**
 3. Install **E3DC RSCP connect** and restart Home Assistant.
 
 ### Manual
@@ -49,15 +49,26 @@ One-Click Installation: <a href="https://my.home-assistant.io/redirect/hacs_repo
 
 ## Configuration
 
-Add the integration via **Settings → Devices & services → Add integration → E3DC RSCP connect** and provide:
+Add the integration via **Settings → Devices & services → Add integration → E3DC RSCP connect**
+and provide:
 
-| Field    | Description                                          | Default      |
-|----------|------------------------------------------------------|--------------|
-| host     | IP address or hostname of your E3/DC system          | —            |
-| port     | RSCP TCP port                                        | `5033`       |
-| username | Your E3/DC portal email address                      | `local.user` |
-| password | Your E3/DC portal password                           | —            |
-| key      | RSCP password configured on the device               | —            |
+| Field       | Description                                          | Default      |
+|-------------|------------------------------------------------------|--------------|
+| login_type  | *Local user* or *Portal user*                        | Local user   |
+| host        | IP address or hostname of your E3/DC system          | —            |
+| port        | RSCP TCP port                                        | `5033`       |
+| username    | Your E3/DC portal email address (portal login only)  | —            |
+| password    | Password of the portal or the local user             | —            |
+| key         | RSCP password configured on the device               | —            |
+
+The login method is a dropdown on the form itself, so it can be changed at any point before
+submitting — also when you come back to a setup you left half finished:
+
+- **Local user** — authenticates as the fixed user `local.user`; leave the username empty.
+- **Portal user** — authenticates with your E3/DC portal credentials; the username is required.
+
+Devices found via SSDP discovery are offered the same choice; host and port are taken from the
+device's UPnP description.
 
 The options flow lets you change these values and the polling interval (default: 10 seconds) without removing the integration.
 

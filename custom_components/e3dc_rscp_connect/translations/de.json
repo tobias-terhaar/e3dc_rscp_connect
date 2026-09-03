@@ -4,21 +4,22 @@
     "step": {
       "user": {
         "title": "RSCP Konfiguration",
-        "description": "Zugangsdaten sind deine Portalzugangsdaten\n oder die für den lokalen Benutzer.",
+        "description": "Wähle die Anmeldeart und gib deine Zugangsdaten ein. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
         "data": {
+          "login_type": "Anmeldeart",
           "host": "IP Adresse",
           "port": "Port",
-          "username": "Benutzername",
+          "username": "Benutzername (nur Portalanmeldung)",
           "password": "Passwort",
           "key": "RSCP Verschlüsselungsschlüssel"
         }
       },
       "discovery_confirm": {
         "title": "E3DC Hauskraftwerk gefunden",
-        "description": "Das Hauskraftwerk {name} wurde unter {host}:{port} gefunden. Bitte gib die Zugangsdaten ein, um die Einrichtung abzuschließen.",
+        "description": "Das Hauskraftwerk {name} wurde unter {host}:{port} gefunden. Wähle die Anmeldeart und gib die Zugangsdaten ein, um die Einrichtung abzuschließen. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
         "data": {
-          "port": "Port",
-          "username": "Benutzername",
+          "login_type": "Anmeldeart",
+          "username": "Benutzername (nur Portalanmeldung)",
           "password": "Passwort",
           "key": "RSCP Verschlüsselungsschlüssel"
         }
@@ -30,26 +31,38 @@
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",
-      "invalid_auth": "Ungültige Benutzerdaten"
+      "invalid_auth": "Ungültige Benutzerdaten",
+      "username_required": "Für die Portalanmeldung wird ein Benutzername benötigt"
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "RSCP Konfiguration",
-        "description": "Zugangsdaten sind deine Portalzugangsdaten\n oder die für den lokalen Benutzer",
+        "description": "Wähle die Anmeldeart und gib deine Zugangsdaten ein. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
         "data": {
+          "login_type": "Anmeldeart",
           "host": "IP Adresse",
           "port": "Port",
-          "username": "Benutzername",
+          "username": "Benutzername (nur Portalanmeldung)",
           "password": "Passwort",
-          "key": "RSCP Verschlüsselungsschlüssel"
+          "key": "RSCP Verschlüsselungsschlüssel",
+          "update_interval": "Aktualisierungsintervall (Sekunden)"
         }
       }
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",
-      "invalid_auth": "Ungültige Benutzerdaten"
+      "invalid_auth": "Ungültige Benutzerdaten",
+      "username_required": "Für die Portalanmeldung wird ein Benutzername benötigt"
+    }
+  },
+  "selector": {
+    "login_type": {
+      "options": {
+        "local": "Lokaler Benutzer",
+        "portal": "Portalbenutzer"
+      }
     }
   },
   "entity": {
