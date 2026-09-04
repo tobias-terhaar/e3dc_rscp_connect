@@ -4,3 +4,4 @@ ruff==0.14.14
 rscp_lib
 pytest
 pytest-homeassistant-custom-component
+defusedxml==0.7.1
