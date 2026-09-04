@@ -6,9 +6,12 @@ import logging
 import time
 
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .e3dc_rscp_api import (
+    E3dcAuthenticationError,
+    E3dcIdentificationError,
     RscpClient,
     SgReadyDataModel,
     StorageDataModel,
@@ -33,12 +36,10 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
         self.password = current["password"]
         self.key = current["key"]
         _LOGGER.info(
-            "Host: %s, Port: %d, user: %s, password: %s, key: %s",
+            "Host: %s, Port: %d, user: %s",
             self.host,
             self.port,
             self.username,
-            self.password,
-            self.key,
         )
 
         self.__last_device_info_update: datetime | None = None
@@ -107,6 +108,10 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
             if self.__device_info_need_update():
                 await self.__update_device_info()
             data = await self.client.fetch_data()
+        except (E3dcAuthenticationError, E3dcIdentificationError) as err:
+            # Polling on with rejected credentials never recovers, let Home
+            # Assistant ask the user for new ones.
+            raise ConfigEntryAuthFailed(str(err)) from err
         except Exception as err:
             _LOGGER.exception("Exception in update_data:")
             raise UpdateFailed(f"Fehler beim Abrufen: {err}") from err

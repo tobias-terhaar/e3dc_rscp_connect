@@ -23,11 +23,22 @@
           "password": "Passwort",
           "key": "RSCP Verschlüsselungsschlüssel"
         }
+      },
+      "reauth_confirm": {
+        "title": "RSCP Konfiguration",
+        "description": "Die Zugangsdaten für {name} ({host}) wurden abgelehnt. Wähle die Anmeldeart und gib die Zugangsdaten erneut ein.",
+        "data": {
+          "login_type": "Anmeldeart",
+          "username": "Benutzername (nur Portalanmeldung)",
+          "password": "Passwort",
+          "key": "RSCP Verschlüsselungsschlüssel"
+        }
       }
     },
     "abort": {
       "already_configured": "Gerät ist bereits konfiguriert",
-      "cannot_connect": "Verbindung fehlgeschlagen"
+      "cannot_connect": "Verbindung fehlgeschlagen",
+      "reauth_successful": "Erneute Anmeldung war erfolgreich"
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",

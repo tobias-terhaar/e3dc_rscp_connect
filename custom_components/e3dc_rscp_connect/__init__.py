@@ -4,11 +4,15 @@ import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from . import const
 from .coordinator import E3dcRscpCoordinator
-from .e3dc_rscp_api import E3dcConnectionError
+from .e3dc_rscp_api import (
+    E3dcAuthenticationError,
+    E3dcIdentificationError,
+    E3dcRscpError,
+)
 
 DOMAIN = const.DOMAIN
 
@@ -23,8 +27,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         await coordinator.async_connect()
 
         await coordinator.async_config_entry_first_refresh()
-    except E3dcConnectionError as err:
+    except (E3dcAuthenticationError, E3dcIdentificationError) as err:
+        # Retrying with the same wrong credentials is pointless, ask the user
+        # for new ones instead. Home Assistant starts the reauth flow for this.
+        raise ConfigEntryAuthFailed(str(err)) from err
+    except E3dcRscpError as err:
         raise ConfigEntryNotReady(f"Error establishing the connection {err}") from err
+
+    # Reload the entry when the options change, otherwise the coordinator keeps
+    # running with the credentials it was created with.
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     # Speichere den Koordinator zentral
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
@@ -39,6 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup done for entry id: %s", entry.entry_id)
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    "Reloads the entry after its configuration was changed."
+    _LOGGER.debug("Configuration changed, reloading entry: %s", entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

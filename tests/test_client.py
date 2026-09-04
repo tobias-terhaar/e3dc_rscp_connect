@@ -11,7 +11,9 @@ sys.path.insert(0, str(custom_components_path))
 from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
-from e3dc_rscp_connect.e3dc_rscp_api import E3dcAuthenticationError
+from rscp_lib.RscpConnection import RscpConnectionException
+
+from e3dc_rscp_connect.e3dc_rscp_api import E3dcAuthenticationError, E3dcConnectionError
 from e3dc_rscp_connect.e3dc_rscp_api.client import RscpClient
 from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxDataModel import WallboxDataModel
 from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxRscpModel import WallboxRscpModel
@@ -246,6 +248,28 @@ class TestConnectAndLogin:
         mock_conn.authorize.return_value = False
 
         with pytest.raises(E3dcAuthenticationError, match="Couldn't authorize"):
+            await client._connect_and_login()
+
+    @pytest.mark.asyncio
+    async def test_raises_auth_error_when_the_answer_cannot_be_decrypted(
+        self, client, mock_conn
+    ):
+        """A wrong RSCP key makes the authorize answer unparsable."""
+        mock_conn.is_connected.side_effect = [False, True]
+        mock_conn.is_authorized.return_value = False
+        mock_conn.authorize.side_effect = IndexError("list index out of range")
+
+        with pytest.raises(E3dcAuthenticationError, match="RSCP key"):
+            await client._connect_and_login()
+
+    @pytest.mark.asyncio
+    async def test_raises_connection_error_when_the_connection_drops(
+        self, client, mock_conn
+    ):
+        mock_conn.is_connected.return_value = False
+        mock_conn.connect.side_effect = RscpConnectionException("no route to host")
+
+        with pytest.raises(E3dcConnectionError):
             await client._connect_and_login()
 
 

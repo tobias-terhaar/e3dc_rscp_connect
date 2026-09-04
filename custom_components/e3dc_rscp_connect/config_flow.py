@@ -131,6 +131,27 @@ def credentials_errors(user_input: dict) -> dict[str, str]:
     return {}
 
 
+def form_defaults(config, *, keep_secrets: bool = True) -> dict:
+    """Turn a stored configuration into defaults for the credentials form.
+
+    Entries configured before the login type was stored are recognized by
+    their username; the fixed local user is never shown in the form.
+    """
+    defaults = dict(config)
+
+    if not keep_secrets:
+        defaults.pop(CONF_PASSWORD, None)
+        defaults.pop(CONF_KEY, None)
+
+    if defaults.get(CONF_USERNAME) == LOCAL_USERNAME:
+        defaults.pop(CONF_USERNAME, None)
+        defaults.setdefault(CONF_LOGIN_TYPE, LOGIN_TYPE_LOCAL)
+    else:
+        defaults.setdefault(CONF_LOGIN_TYPE, LOGIN_TYPE_PORTAL)
+
+    return defaults
+
+
 def entry_data(user_input: dict) -> dict:
     """Build the entry data from the submitted form.
 
@@ -263,6 +284,53 @@ class E3DCRscpConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "port": str(self._discovered_port),
         }
 
+    async def async_step_reauth(self, entry_data):
+        """Handle credentials the device rejected."""
+        entry = self._get_reauth_entry()
+        # Home Assistant only fills in the name, but flow_title also needs the
+        # host - without it the frontend can't render the title at all.
+        self.context["title_placeholders"] = {
+            "name": entry.title,
+            "host": (entry.options or entry.data).get(CONF_HOST, ""),
+        }
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(self, user_input=None):
+        """Ask for new credentials and reload the entry with them."""
+        entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors = credentials_errors(user_input)
+            if not errors:
+                credentials = entry_data(user_input)
+                # The coordinator reads the options and falls back to the data,
+                # so the new credentials have to reach whichever is in use.
+                if entry.options:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data={**entry.data, **credentials},
+                        options={**entry.options, **credentials},
+                    )
+                return self.async_update_reload_and_abort(
+                    entry, data={**entry.data, **credentials}
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=credentials_schema(
+                include_host=False,
+                include_port=False,
+                defaults=user_input
+                or form_defaults(entry.options or entry.data, keep_secrets=False),
+            ),
+            description_placeholders={
+                "name": entry.title,
+                "host": (entry.options or entry.data).get(CONF_HOST, ""),
+            },
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -297,14 +365,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     def _current_values(self) -> dict:
         """Current configuration, used as the defaults of the options form."""
         # Aktuelle Werte aus Optionen oder Fallback auf ursprüngliche Konfiguration
-        current = dict(self.config_entry.options or self.config_entry.data)
-
-        # Entries configured before the login type was stored are recognized by
-        # their username; the fixed local user is never shown in the form.
-        if current.get(CONF_USERNAME) == LOCAL_USERNAME:
-            current.pop(CONF_USERNAME, None)
-            current.setdefault(CONF_LOGIN_TYPE, LOGIN_TYPE_LOCAL)
-        else:
-            current.setdefault(CONF_LOGIN_TYPE, LOGIN_TYPE_PORTAL)
-
-        return current
+        return form_defaults(self.config_entry.options or self.config_entry.data)

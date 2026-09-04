@@ -23,11 +23,22 @@
           "password": "Password",
           "key": "RSCP Encryption key"
         }
+      },
+      "reauth_confirm": {
+        "title": "E3DC Configuration",
+        "description": "The credentials for {name} ({host}) were rejected. Choose the login method and enter the credentials again.",
+        "data": {
+          "login_type": "Login method",
+          "username": "Username (portal login only)",
+          "password": "Password",
+          "key": "RSCP Encryption key"
+        }
       }
     },
     "abort": {
       "already_configured": "Device is already configured",
-      "cannot_connect": "Failed to connect"
+      "cannot_connect": "Failed to connect",
+      "reauth_successful": "Re-authentication was successful"
     },
     "error": {
       "cannot_connect": "Failed to connect",

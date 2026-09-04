@@ -95,7 +95,20 @@ class RscpClient:
             raise E3dcConnectionError(f"Couldn't connect to the device: {err}") from err
 
         if self._connection.is_connected() and not self._connection.is_authorized():
-            if not await self._connection.authorize():
+            try:
+                authorized = await self._connection.authorize()
+            except RscpConnectionException as err:
+                raise E3dcConnectionError(
+                    f"Connection lost while authorizing: {err}"
+                ) from err
+            except Exception as err:
+                # A wrong RSCP key makes the answer undecryptable, so the reply
+                # can't be parsed at all - that is a credentials problem too.
+                raise E3dcAuthenticationError(
+                    "Couldn't authorize! Check the RSCP key!"
+                ) from err
+
+            if not authorized:
                 raise E3dcAuthenticationError(
                     "Couldn't authorize! Check username and password!"
                 )

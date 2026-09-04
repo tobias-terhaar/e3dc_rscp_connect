@@ -515,3 +515,134 @@ def test_options_reports_a_missing_portal_username():
 
     assert result["step_id"] == "init"
     assert result["errors"] == {"username": "username_required"}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Reauth
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _reauth_flow(data: dict, options: dict | None = None):
+    """A config flow in the reauth state for an entry with the given config."""
+    flow = E3DCRscpConnectConfigFlow()
+    flow.context = {"title_placeholders": {"name": "S10-742210004447"}}
+    entry = Mock(data=data, options=options or {}, title="S10-742210004447")
+    flow._get_reauth_entry = Mock(return_value=entry)
+    flow.async_update_reload_and_abort = Mock(side_effect=lambda entry, **kw: kw)
+    return flow, entry
+
+
+def test_reauth_asks_for_credentials_only():
+    flow, _ = _reauth_flow(PORTAL_ENTRY)
+
+    result = run(flow.async_step_reauth({}))
+
+    assert result["step_id"] == "reauth_confirm"
+    assert schema_keys(result["data_schema"]) == [
+        "login_type",
+        "username",
+        "password",
+        "key",
+    ]
+    assert result["description_placeholders"]["host"] == "192.168.0.10"
+
+
+def test_reauth_provides_every_placeholder_of_the_flow_title():
+    """Home Assistant only fills in the name, flow_title also needs the host."""
+    flow, _ = _reauth_flow(PORTAL_ENTRY)
+
+    run(flow.async_step_reauth(PORTAL_ENTRY))
+
+    placeholders = flow.context["title_placeholders"]
+    assert placeholders == {"name": "S10-742210004447", "host": "192.168.0.10"}
+
+
+def test_reauth_takes_the_title_host_from_the_options():
+    """The options win over the data, the title has to follow."""
+    options = {**PORTAL_ENTRY, "host": "192.168.0.20"}
+    flow, _ = _reauth_flow(PORTAL_ENTRY, options=options)
+
+    run(flow.async_step_reauth(PORTAL_ENTRY))
+
+    assert flow.context["title_placeholders"]["host"] == "192.168.0.20"
+
+
+def test_reauth_form_does_not_prefill_the_rejected_secrets():
+    """Password and key were rejected, so they must be entered again."""
+    flow, _ = _reauth_flow(PORTAL_ENTRY)
+
+    result = run(flow.async_step_reauth_confirm())
+
+    defaults = schema_defaults(result["data_schema"])
+    assert defaults["login_type"] == LOGIN_TYPE_PORTAL
+    assert defaults["username"] == "me@example.com"
+    assert "password" not in defaults
+    assert "key" not in defaults
+
+
+def test_reauth_updates_the_entry_data():
+    flow, _ = _reauth_flow(PORTAL_ENTRY)
+
+    result = run(
+        flow.async_step_reauth_confirm(
+            {
+                "login_type": LOGIN_TYPE_PORTAL,
+                "username": "me@example.com",
+                "password": "new-pw",
+                "key": "new-key",
+            }
+        )
+    )
+
+    assert result["data"]["password"] == "new-pw"
+    assert result["data"]["key"] == "new-key"
+    # Host and port are not part of the form and must survive.
+    assert result["data"]["host"] == "192.168.0.10"
+    assert result["data"]["port"] == 5033
+
+
+def test_reauth_also_updates_the_options_when_they_are_in_use():
+    """The coordinator prefers the options, so stale ones would win."""
+    stale_options = {**PORTAL_ENTRY, "password": "old-pw", "key": "old-key"}
+    flow, _ = _reauth_flow(PORTAL_ENTRY, options=stale_options)
+
+    result = run(
+        flow.async_step_reauth_confirm(
+            {
+                "login_type": LOGIN_TYPE_PORTAL,
+                "username": "me@example.com",
+                "password": "new-pw",
+                "key": "new-key",
+            }
+        )
+    )
+
+    assert result["options"]["password"] == "new-pw"
+    assert result["options"]["key"] == "new-key"
+    assert result["options"]["update_interval"] == 15
+
+
+def test_reauth_can_switch_to_the_local_user():
+    flow, _ = _reauth_flow(PORTAL_ENTRY)
+
+    result = run(
+        flow.async_step_reauth_confirm(
+            {"login_type": LOGIN_TYPE_LOCAL, "password": "new-pw", "key": "new-key"}
+        )
+    )
+
+    assert result["data"]["username"] == LOCAL_USERNAME
+    assert result["data"]["login_type"] == LOGIN_TYPE_LOCAL
+
+
+def test_reauth_reports_a_missing_portal_username():
+    flow, _ = _reauth_flow(LOCAL_ENTRY)
+
+    result = run(
+        flow.async_step_reauth_confirm(
+            {"login_type": LOGIN_TYPE_PORTAL, "password": "pw", "key": "k"}
+        )
+    )
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"username": "username_required"}
