@@ -1,6 +1,10 @@
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v"
+# Required by pytest-homeassistant-custom-component: its autouse fixtures are
+# async, and pytest-asyncio ignores those in strict mode - every test then
+# errors with "requested an async fixture with no plugin that handled it".
+asyncio_mode = "auto"
 
 [tool.coverage.run]
 source = ["custom_components/e3dc_rscp_connect"]

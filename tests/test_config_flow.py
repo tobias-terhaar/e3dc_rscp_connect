@@ -8,7 +8,6 @@ custom_components_path = (
 )
 sys.path.insert(0, str(custom_components_path))
 
-import asyncio
 from unittest.mock import Mock
 
 import pytest
@@ -59,11 +58,6 @@ DEVICE_DESCRIPTION = """<?xml version="1.0"?>
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
-
-
-def run(coro):
-    """Run a flow step without depending on an async test plugin."""
-    return asyncio.run(coro)
 
 
 def schema_keys(schema):
@@ -332,37 +326,41 @@ def test_entry_data_does_not_mutate_user_input():
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def test_user_step_shows_one_form_with_the_login_type(flow):
-    result = run(flow.async_step_user())
+@pytest.mark.asyncio
+async def test_user_step_shows_one_form_with_the_login_type(flow):
+    result = await flow.async_step_user()
     assert result["step_id"] == "user"
     assert "login_type" in schema_keys(result["data_schema"])
     assert result["errors"] == {}
 
 
-def test_user_step_creates_entry_with_local_user(flow):
+@pytest.mark.asyncio
+async def test_user_step_creates_entry_with_local_user(flow):
     flow.async_create_entry = Mock(side_effect=lambda **kwargs: kwargs)
 
-    result = run(flow.async_step_user(LOCAL_INPUT))
+    result = await flow.async_step_user(LOCAL_INPUT)
 
     assert result["title"] == "192.168.0.10"
     assert result["data"]["username"] == LOCAL_USERNAME
     assert result["data"]["login_type"] == LOGIN_TYPE_LOCAL
 
 
-def test_user_step_creates_entry_with_portal_user(flow):
+@pytest.mark.asyncio
+async def test_user_step_creates_entry_with_portal_user(flow):
     flow.async_create_entry = Mock(side_effect=lambda **kwargs: kwargs)
 
-    result = run(flow.async_step_user(PORTAL_INPUT))
+    result = await flow.async_step_user(PORTAL_INPUT)
 
     assert result["data"]["username"] == "me@example.com"
     assert result["data"]["login_type"] == LOGIN_TYPE_PORTAL
 
 
-def test_user_step_reports_a_missing_portal_username(flow):
+@pytest.mark.asyncio
+async def test_user_step_reports_a_missing_portal_username(flow):
     user_input = {**PORTAL_INPUT}
     del user_input["username"]
 
-    result = run(flow.async_step_user(user_input))
+    result = await flow.async_step_user(user_input)
 
     assert result["step_id"] == "user"
     assert result["errors"] == {"username": "username_required"}
@@ -377,9 +375,10 @@ def test_user_step_reports_a_missing_portal_username(flow):
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def test_discovery_form_omits_host_and_port(discovered_flow):
+@pytest.mark.asyncio
+async def test_discovery_form_omits_host_and_port(discovered_flow):
     """Host and port come from the discovery, everything else is asked for."""
-    result = run(discovered_flow.async_step_discovery_confirm())
+    result = await discovered_flow.async_step_discovery_confirm()
     assert result["step_id"] == "discovery_confirm"
     assert schema_keys(result["data_schema"]) == [
         "login_type",
@@ -391,22 +390,22 @@ def test_discovery_form_omits_host_and_port(discovered_flow):
     assert result["description_placeholders"]["port"] == "5034"
 
 
-def test_discovery_form_can_always_change_the_login_type(discovered_flow):
+@pytest.mark.asyncio
+async def test_discovery_form_can_always_change_the_login_type(discovered_flow):
     """Resuming an interrupted discovery must not lock in the login type."""
-    first = run(discovered_flow.async_step_discovery_confirm())
-    resumed = run(discovered_flow.async_step_discovery_confirm())
+    first = await discovered_flow.async_step_discovery_confirm()
+    resumed = await discovered_flow.async_step_discovery_confirm()
 
     assert schema_keys(first["data_schema"]) == schema_keys(resumed["data_schema"])
     assert schema_defaults(resumed["data_schema"])["login_type"] == LOGIN_TYPE_LOCAL
 
 
-def test_discovery_creates_entry_with_local_user(discovered_flow):
+@pytest.mark.asyncio
+async def test_discovery_creates_entry_with_local_user(discovered_flow):
     discovered_flow.async_create_entry = Mock(side_effect=lambda **kwargs: kwargs)
 
-    result = run(
-        discovered_flow.async_step_discovery_confirm(
-            {"login_type": LOGIN_TYPE_LOCAL, "password": "pw", "key": "k"}
-        )
+    result = await discovered_flow.async_step_discovery_confirm(
+        {"login_type": LOGIN_TYPE_LOCAL, "password": "pw", "key": "k"}
     )
 
     assert result["title"] == "S10-742210004447"
@@ -416,18 +415,17 @@ def test_discovery_creates_entry_with_local_user(discovered_flow):
     assert result["data"]["login_type"] == LOGIN_TYPE_LOCAL
 
 
-def test_discovery_creates_entry_with_portal_user(discovered_flow):
+@pytest.mark.asyncio
+async def test_discovery_creates_entry_with_portal_user(discovered_flow):
     discovered_flow.async_create_entry = Mock(side_effect=lambda **kwargs: kwargs)
 
-    result = run(
-        discovered_flow.async_step_discovery_confirm(
-            {
-                "login_type": LOGIN_TYPE_PORTAL,
-                "username": "me@example.com",
-                "password": "pw",
-                "key": "k",
-            }
-        )
+    result = await discovered_flow.async_step_discovery_confirm(
+        {
+            "login_type": LOGIN_TYPE_PORTAL,
+            "username": "me@example.com",
+            "password": "pw",
+            "key": "k",
+        }
     )
 
     assert result["data"]["host"] == "192.168.0.10"
@@ -436,11 +434,10 @@ def test_discovery_creates_entry_with_portal_user(discovered_flow):
     assert result["data"]["login_type"] == LOGIN_TYPE_PORTAL
 
 
-def test_discovery_reports_a_missing_portal_username(discovered_flow):
-    result = run(
-        discovered_flow.async_step_discovery_confirm(
-            {"login_type": LOGIN_TYPE_PORTAL, "password": "pw", "key": "k"}
-        )
+@pytest.mark.asyncio
+async def test_discovery_reports_a_missing_portal_username(discovered_flow):
+    result = await discovered_flow.async_step_discovery_confirm(
+        {"login_type": LOGIN_TYPE_PORTAL, "password": "pw", "key": "k"}
     )
 
     assert result["step_id"] == "discovery_confirm"
@@ -453,8 +450,9 @@ def test_discovery_reports_a_missing_portal_username(discovered_flow):
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def test_options_form_prefills_a_local_entry():
-    result = run(StubOptionsFlow(LOCAL_ENTRY).async_step_init())
+@pytest.mark.asyncio
+async def test_options_form_prefills_a_local_entry():
+    result = await StubOptionsFlow(LOCAL_ENTRY).async_step_init()
 
     assert result["step_id"] == "init"
     defaults = schema_defaults(result["data_schema"])
@@ -465,53 +463,58 @@ def test_options_form_prefills_a_local_entry():
     assert "username" not in defaults
 
 
-def test_options_form_prefills_a_portal_entry():
-    result = run(StubOptionsFlow(PORTAL_ENTRY).async_step_init())
+@pytest.mark.asyncio
+async def test_options_form_prefills_a_portal_entry():
+    result = await StubOptionsFlow(PORTAL_ENTRY).async_step_init()
 
     defaults = schema_defaults(result["data_schema"])
     assert defaults["login_type"] == LOGIN_TYPE_PORTAL
     assert defaults["username"] == "me@example.com"
 
 
-def test_options_form_infers_the_login_type_of_older_entries():
+@pytest.mark.asyncio
+async def test_options_form_infers_the_login_type_of_older_entries():
     """Entries created before the login type was stored have no login_type."""
     legacy_local = {k: v for k, v in LOCAL_ENTRY.items() if k != "login_type"}
     legacy_portal = {k: v for k, v in PORTAL_ENTRY.items() if k != "login_type"}
 
-    local = run(StubOptionsFlow(legacy_local).async_step_init())
-    portal = run(StubOptionsFlow(legacy_portal).async_step_init())
+    local = await StubOptionsFlow(legacy_local).async_step_init()
+    portal = await StubOptionsFlow(legacy_portal).async_step_init()
 
     assert schema_defaults(local["data_schema"])["login_type"] == LOGIN_TYPE_LOCAL
     assert schema_defaults(portal["data_schema"])["login_type"] == LOGIN_TYPE_PORTAL
 
 
-def test_options_switch_to_local_stores_local_user():
+@pytest.mark.asyncio
+async def test_options_switch_to_local_stores_local_user():
     handler = StubOptionsFlow(PORTAL_ENTRY)
     handler.async_create_entry = Mock(side_effect=lambda **kwargs: kwargs)
 
-    result = run(handler.async_step_init({**LOCAL_INPUT, "update_interval": 20}))
+    result = await handler.async_step_init({**LOCAL_INPUT, "update_interval": 20})
 
     assert result["data"]["username"] == LOCAL_USERNAME
     assert result["data"]["login_type"] == LOGIN_TYPE_LOCAL
     assert result["data"]["update_interval"] == 20
 
 
-def test_options_switch_to_portal_stores_given_user():
+@pytest.mark.asyncio
+async def test_options_switch_to_portal_stores_given_user():
     handler = StubOptionsFlow(LOCAL_ENTRY)
     handler.async_create_entry = Mock(side_effect=lambda **kwargs: kwargs)
 
-    result = run(handler.async_step_init({**PORTAL_INPUT, "update_interval": 20}))
+    result = await handler.async_step_init({**PORTAL_INPUT, "update_interval": 20})
 
     assert result["data"]["username"] == "me@example.com"
     assert result["data"]["login_type"] == LOGIN_TYPE_PORTAL
 
 
-def test_options_reports_a_missing_portal_username():
+@pytest.mark.asyncio
+async def test_options_reports_a_missing_portal_username():
     handler = StubOptionsFlow(LOCAL_ENTRY)
     user_input = {**PORTAL_INPUT, "update_interval": 20}
     del user_input["username"]
 
-    result = run(handler.async_step_init(user_input))
+    result = await handler.async_step_init(user_input)
 
     assert result["step_id"] == "init"
     assert result["errors"] == {"username": "username_required"}
@@ -532,10 +535,11 @@ def _reauth_flow(data: dict, options: dict | None = None):
     return flow, entry
 
 
-def test_reauth_asks_for_credentials_only():
+@pytest.mark.asyncio
+async def test_reauth_asks_for_credentials_only():
     flow, _ = _reauth_flow(PORTAL_ENTRY)
 
-    result = run(flow.async_step_reauth({}))
+    result = await flow.async_step_reauth({})
 
     assert result["step_id"] == "reauth_confirm"
     assert schema_keys(result["data_schema"]) == [
@@ -547,31 +551,34 @@ def test_reauth_asks_for_credentials_only():
     assert result["description_placeholders"]["host"] == "192.168.0.10"
 
 
-def test_reauth_provides_every_placeholder_of_the_flow_title():
+@pytest.mark.asyncio
+async def test_reauth_provides_every_placeholder_of_the_flow_title():
     """Home Assistant only fills in the name, flow_title also needs the host."""
     flow, _ = _reauth_flow(PORTAL_ENTRY)
 
-    run(flow.async_step_reauth(PORTAL_ENTRY))
+    await flow.async_step_reauth(PORTAL_ENTRY)
 
     placeholders = flow.context["title_placeholders"]
     assert placeholders == {"name": "S10-742210004447", "host": "192.168.0.10"}
 
 
-def test_reauth_takes_the_title_host_from_the_options():
+@pytest.mark.asyncio
+async def test_reauth_takes_the_title_host_from_the_options():
     """The options win over the data, the title has to follow."""
     options = {**PORTAL_ENTRY, "host": "192.168.0.20"}
     flow, _ = _reauth_flow(PORTAL_ENTRY, options=options)
 
-    run(flow.async_step_reauth(PORTAL_ENTRY))
+    await flow.async_step_reauth(PORTAL_ENTRY)
 
     assert flow.context["title_placeholders"]["host"] == "192.168.0.20"
 
 
-def test_reauth_form_does_not_prefill_the_rejected_secrets():
+@pytest.mark.asyncio
+async def test_reauth_form_does_not_prefill_the_rejected_secrets():
     """Password and key were rejected, so they must be entered again."""
     flow, _ = _reauth_flow(PORTAL_ENTRY)
 
-    result = run(flow.async_step_reauth_confirm())
+    result = await flow.async_step_reauth_confirm()
 
     defaults = schema_defaults(result["data_schema"])
     assert defaults["login_type"] == LOGIN_TYPE_PORTAL
@@ -580,18 +587,17 @@ def test_reauth_form_does_not_prefill_the_rejected_secrets():
     assert "key" not in defaults
 
 
-def test_reauth_updates_the_entry_data():
+@pytest.mark.asyncio
+async def test_reauth_updates_the_entry_data():
     flow, _ = _reauth_flow(PORTAL_ENTRY)
 
-    result = run(
-        flow.async_step_reauth_confirm(
-            {
-                "login_type": LOGIN_TYPE_PORTAL,
-                "username": "me@example.com",
-                "password": "new-pw",
-                "key": "new-key",
-            }
-        )
+    result = await flow.async_step_reauth_confirm(
+        {
+            "login_type": LOGIN_TYPE_PORTAL,
+            "username": "me@example.com",
+            "password": "new-pw",
+            "key": "new-key",
+        }
     )
 
     assert result["data"]["password"] == "new-pw"
@@ -601,20 +607,19 @@ def test_reauth_updates_the_entry_data():
     assert result["data"]["port"] == 5033
 
 
-def test_reauth_also_updates_the_options_when_they_are_in_use():
+@pytest.mark.asyncio
+async def test_reauth_also_updates_the_options_when_they_are_in_use():
     """The coordinator prefers the options, so stale ones would win."""
     stale_options = {**PORTAL_ENTRY, "password": "old-pw", "key": "old-key"}
     flow, _ = _reauth_flow(PORTAL_ENTRY, options=stale_options)
 
-    result = run(
-        flow.async_step_reauth_confirm(
-            {
-                "login_type": LOGIN_TYPE_PORTAL,
-                "username": "me@example.com",
-                "password": "new-pw",
-                "key": "new-key",
-            }
-        )
+    result = await flow.async_step_reauth_confirm(
+        {
+            "login_type": LOGIN_TYPE_PORTAL,
+            "username": "me@example.com",
+            "password": "new-pw",
+            "key": "new-key",
+        }
     )
 
     assert result["options"]["password"] == "new-pw"
@@ -622,26 +627,24 @@ def test_reauth_also_updates_the_options_when_they_are_in_use():
     assert result["options"]["update_interval"] == 15
 
 
-def test_reauth_can_switch_to_the_local_user():
+@pytest.mark.asyncio
+async def test_reauth_can_switch_to_the_local_user():
     flow, _ = _reauth_flow(PORTAL_ENTRY)
 
-    result = run(
-        flow.async_step_reauth_confirm(
-            {"login_type": LOGIN_TYPE_LOCAL, "password": "new-pw", "key": "new-key"}
-        )
+    result = await flow.async_step_reauth_confirm(
+        {"login_type": LOGIN_TYPE_LOCAL, "password": "new-pw", "key": "new-key"}
     )
 
     assert result["data"]["username"] == LOCAL_USERNAME
     assert result["data"]["login_type"] == LOGIN_TYPE_LOCAL
 
 
-def test_reauth_reports_a_missing_portal_username():
+@pytest.mark.asyncio
+async def test_reauth_reports_a_missing_portal_username():
     flow, _ = _reauth_flow(LOCAL_ENTRY)
 
-    result = run(
-        flow.async_step_reauth_confirm(
-            {"login_type": LOGIN_TYPE_PORTAL, "password": "pw", "key": "k"}
-        )
+    result = await flow.async_step_reauth_confirm(
+        {"login_type": LOGIN_TYPE_PORTAL, "password": "pw", "key": "k"}
     )
 
     assert result["step_id"] == "reauth_confirm"

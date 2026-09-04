@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+cd "$(dirname "$0")/.."
+
+# Always go through the interpreter that scripts/setup installed the
+# requirements into. The devcontainer image ships its own pytest in
+# /usr/local/py-utils/venvs/pytest, which shadows ours on PATH and mixes two
+# installations - pytest from one, its plugins from the other.
+exec python3 -m pytest "${@:-tests/}"
