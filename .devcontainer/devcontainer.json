@@ -1,6 +1,6 @@
 {
     "name": "tobias-terhaar/e3dc_rscp_connect",
-    "image": "mcr.microsoft.com/devcontainers/python:3.13",
+    "image": "mcr.microsoft.com/devcontainers/python:3.14",
     "workspaceFolder": "/workspaces/e3dc_rscp_connect",
     "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && bash scripts/setup",
     "features": {
