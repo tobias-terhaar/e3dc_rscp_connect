@@ -8,7 +8,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import const
 from .coordinator import E3dcRscpCoordinator
-from rscp_lib.RscpConnection import RscpConnectionException
+from .e3dc_rscp_api import E3dcConnectionError
 
 DOMAIN = const.DOMAIN
 
@@ -20,10 +20,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Sets up the integration from config entry."""
     try:
         coordinator = E3dcRscpCoordinator(hass, entry)
-        await coordinator.client.client.connect()
+        await coordinator.async_connect()
 
         await coordinator.async_config_entry_first_refresh()
-    except RscpConnectionException as err:
+    except E3dcConnectionError as err:
         raise ConfigEntryNotReady(f"Error establishing the connection {err}") from err
 
     # Speichere den Koordinator zentral
@@ -48,7 +48,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator = data["coordinator"]
     await coordinator.stop_remote_control()
-    coordinator.client.client.disconnect()
+    coordinator.disconnect()
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, ["sensor", "select", "number", "switch"]

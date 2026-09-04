@@ -11,11 +11,12 @@ sys.path.insert(0, str(custom_components_path))
 from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
-from e3dc_rscp_connect.client import RscpClient
-from e3dc_rscp_connect.model.WallboxDataModel import WallboxDataModel
-from e3dc_rscp_connect.model.WallboxRscpModel import WallboxRscpModel
-from e3dc_rscp_connect.model.StorageRscpModel import StorageRscpModel
-from e3dc_rscp_connect.model.SgReadyRscpModel import SgReadyRscpModel
+from e3dc_rscp_connect.e3dc_rscp_api import E3dcAuthenticationError
+from e3dc_rscp_connect.e3dc_rscp_api.client import RscpClient
+from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxDataModel import WallboxDataModel
+from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxRscpModel import WallboxRscpModel
+from e3dc_rscp_connect.e3dc_rscp_api.model.StorageRscpModel import StorageRscpModel
+from e3dc_rscp_connect.e3dc_rscp_api.model.SgReadyRscpModel import SgReadyRscpModel
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -42,8 +43,8 @@ def mock_conn():
 @pytest.fixture
 def client(mock_conn):
     with (
-        patch("e3dc_rscp_connect.client.RscpConnection", return_value=mock_conn),
-        patch("e3dc_rscp_connect.client.RscpEncryption"),
+        patch("e3dc_rscp_connect.e3dc_rscp_api.client.RscpConnection", return_value=mock_conn),
+        patch("e3dc_rscp_connect.e3dc_rscp_api.client.RscpEncryption"),
     ):
         return RscpClient("localhost", 5033, "user", "password", "key")
 
@@ -70,7 +71,7 @@ class TestInit:
         assert client.wallboxes == []
 
     def test_connection_object_is_stored(self, client, mock_conn):
-        assert client.client is mock_conn
+        assert client._connection is mock_conn
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -244,7 +245,7 @@ class TestConnectAndLogin:
         mock_conn.is_authorized.return_value = False
         mock_conn.authorize.return_value = False
 
-        with pytest.raises(ConnectionError, match="Couldn't authorize"):
+        with pytest.raises(E3dcAuthenticationError, match="Couldn't authorize"):
             await client._connect_and_login()
 
 
@@ -406,14 +407,14 @@ class TestSendAndReceive:
     @pytest.mark.asyncio
     async def test_returns_empty_list_when_recv_buffer_is_none(self, client, mock_conn):
         mock_conn.receive.return_value = None
-        with patch("e3dc_rscp_connect.client.RscpFrame"):
+        with patch("e3dc_rscp_connect.e3dc_rscp_api.client.RscpFrame"):
             result = await client.send_and_receive([])
         assert result == []
 
     @pytest.mark.asyncio
     async def test_calls_send_with_packed_frame(self, client, mock_conn):
         mock_conn.receive.return_value = None
-        with patch("e3dc_rscp_connect.client.RscpFrame") as MockFrame:
+        with patch("e3dc_rscp_connect.e3dc_rscp_api.client.RscpFrame") as MockFrame:
             MockFrame.return_value.packFrame.return_value = b"packed_data"
             await client.send_and_receive([Mock()])
         mock_conn.send.assert_called_once_with(b"packed_data")
@@ -428,7 +429,7 @@ class TestSendAndReceive:
         unpack_frame = Mock()
         unpack_frame.getRscpValues.return_value = ["val1", "val2"]
 
-        with patch("e3dc_rscp_connect.client.RscpFrame") as MockFrame:
+        with patch("e3dc_rscp_connect.e3dc_rscp_api.client.RscpFrame") as MockFrame:
             MockFrame.side_effect = [pack_frame, unpack_frame]
             MockFrame.getFrameLength.return_value = 10  # < 20 → unpack is called
 
@@ -447,7 +448,7 @@ class TestSendAndReceive:
         unpack_frame = Mock()
         unpack_frame.getRscpValues.return_value = []
 
-        with patch("e3dc_rscp_connect.client.RscpFrame") as MockFrame:
+        with patch("e3dc_rscp_connect.e3dc_rscp_api.client.RscpFrame") as MockFrame:
             MockFrame.side_effect = [pack_frame, unpack_frame]
             MockFrame.getFrameLength.return_value = 10  # == 10, not greater
 
@@ -473,7 +474,7 @@ class TestSendAndReceive:
         mock_conn.send = tracking_send
         mock_conn.receive = tracking_receive
 
-        with patch("e3dc_rscp_connect.client.RscpFrame"):
+        with patch("e3dc_rscp_connect.e3dc_rscp_api.client.RscpFrame"):
             import asyncio
             await asyncio.gather(
                 client.send_and_receive([]),
@@ -579,7 +580,7 @@ class TestIdentifyDevice:
 
         with (
             patch.object(client, "send_and_receive", new=AsyncMock(return_value=[mock_value])),
-            patch("e3dc_rscp_connect.client.StorageRscpModel.identify", return_value=mock_storage),
+            patch("e3dc_rscp_connect.e3dc_rscp_api.client.StorageRscpModel.identify", return_value=mock_storage),
         ):
             await client.identify_device()
 
@@ -601,8 +602,8 @@ class TestIdentifyDevice:
 
         with (
             patch.object(client, "send_and_receive", new=AsyncMock(return_value=[mock_value])),
-            patch("e3dc_rscp_connect.client.StorageRscpModel.identify", return_value=None),
-            patch("e3dc_rscp_connect.client.WallboxRscpModel.identify", return_value=mock_wb),
+            patch("e3dc_rscp_connect.e3dc_rscp_api.client.StorageRscpModel.identify", return_value=None),
+            patch("e3dc_rscp_connect.e3dc_rscp_api.client.WallboxRscpModel.identify", return_value=mock_wb),
         ):
             await client.identify_device()
 
@@ -623,9 +624,9 @@ class TestIdentifyDevice:
 
         with (
             patch.object(client, "send_and_receive", new=AsyncMock(return_value=[mock_value])),
-            patch("e3dc_rscp_connect.client.StorageRscpModel.identify", return_value=None),
-            patch("e3dc_rscp_connect.client.WallboxRscpModel.identify", return_value=None),
-            patch("e3dc_rscp_connect.client.SgReadyRscpModel.identify", return_value=mock_sg),
+            patch("e3dc_rscp_connect.e3dc_rscp_api.client.StorageRscpModel.identify", return_value=None),
+            patch("e3dc_rscp_connect.e3dc_rscp_api.client.WallboxRscpModel.identify", return_value=None),
+            patch("e3dc_rscp_connect.e3dc_rscp_api.client.SgReadyRscpModel.identify", return_value=mock_sg),
         ):
             await client.identify_device()
 

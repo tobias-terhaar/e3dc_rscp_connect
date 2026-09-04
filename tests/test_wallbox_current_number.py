@@ -16,7 +16,7 @@ from e3dc_rscp_connect.entities.wallbox_current_number import (
     WallboxMaxCurrentNumber,
     WallboxMinCurrentNumber,
 )
-from e3dc_rscp_connect.model.WallboxDataModel import WallboxCurrentModel, WallboxDataModel
+from e3dc_rscp_connect.e3dc_rscp_api import WallboxCurrentModel, WallboxDataModel
 
 
 # --- Fixtures ---

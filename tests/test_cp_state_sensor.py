@@ -10,9 +10,7 @@ custom_components_path = (
 sys.path.insert(0, str(custom_components_path))
 
 from e3dc_rscp_connect.entities import CpStateSensor
-from e3dc_rscp_connect.model.WallboxDataModel import (
-    WallboxDataModel,
-)
+from e3dc_rscp_connect.e3dc_rscp_api import WallboxDataModel
 import pytest
 
 

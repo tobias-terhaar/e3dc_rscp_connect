@@ -8,10 +8,12 @@ import time
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .client import RscpClient
-from .model.SgReadyDataModel import SgReadyDataModel
-from .model.StorageDataModel import StorageDataModel
-from .model.WallboxDataModel import WallboxDataModel
+from .e3dc_rscp_api import (
+    RscpClient,
+    SgReadyDataModel,
+    StorageDataModel,
+    WallboxDataModel,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +59,14 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
 
         self._remote_power_w: int = 0
         self._remote_task: asyncio.Task | None = None
+
+    async def async_connect(self) -> None:
+        "Opens the connection to the device."
+        await self.client.connect()
+
+    def disconnect(self) -> None:
+        "Closes the connection to the device."
+        self.client.disconnect()
 
     def __device_info_need_update(self):
         now = datetime.now(UTC)

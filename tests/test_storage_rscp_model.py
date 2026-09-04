@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from e3dc_rscp_connect.model.StorageRscpModel import StorageRscpModel
+from e3dc_rscp_connect.e3dc_rscp_api.model.StorageRscpModel import StorageRscpModel
 
 
 @pytest.fixture

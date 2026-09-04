@@ -3,10 +3,16 @@
 import asyncio
 import logging
 
-from rscp_lib.RscpConnection import RscpConnection
+from rscp_lib.RscpConnection import RscpConnection, RscpConnectionException
 from rscp_lib.RscpEncryption import RscpEncryption
 from rscp_lib.RscpFrame import RscpFrame
 from rscp_lib.RscpValue import RscpValue
+from .exceptions import (
+    E3dcAuthenticationError,
+    E3dcConnectionError,
+    E3dcIdentificationError,
+    E3dcRscpError,
+)
 from .model.RscpHandlerPipeline import RscpHandlerPipeline
 from .model.SgReadyRscpModel import SgReadyRscpModel
 from .model.StorageRscpModel import StorageRscpModel
@@ -23,7 +29,7 @@ class RscpClient:
         self, host: str, port: int, username: str, password: str, rscp_key: str
     ) -> None:
         "Initializes the client connection."
-        self.client = RscpConnection(
+        self._connection = RscpConnection(
             host, port, RscpEncryption(rscp_key), username, password
         )
         self.__storage: StorageRscpModel | None = None
@@ -31,6 +37,22 @@ class RscpClient:
         self.__wallboxes = []
         self.__handlerPipeline = RscpHandlerPipeline()
         self.__lock = asyncio.Lock()
+
+    async def connect(self) -> None:
+        """Opens the connection to the device and authorizes on it.
+
+        Raises E3dcConnectionError if the device can't be reached and
+        E3dcAuthenticationError if it rejects the credentials.
+        """
+        await self._connect_and_login()
+
+    def disconnect(self) -> None:
+        "Closes the connection to the device."
+        self._connection.disconnect()
+
+    def is_connected(self) -> bool:
+        "Returns True while the connection to the device is open."
+        return self._connection.is_connected()
 
     @property
     def wallboxes(self):
@@ -66,11 +88,15 @@ class RscpClient:
         return self.__sg_ready.get_model()
 
     async def _connect_and_login(self) -> None:
-        if not self.client.is_connected():
-            await self.client.connect()
-        if self.client.is_connected() and not self.client.is_authorized():
-            if not await self.client.authorize():
-                raise ConnectionError(
+        try:
+            if not self._connection.is_connected():
+                await self._connection.connect()
+        except RscpConnectionException as err:
+            raise E3dcConnectionError(f"Couldn't connect to the device: {err}") from err
+
+        if self._connection.is_connected() and not self._connection.is_authorized():
+            if not await self._connection.authorize():
+                raise E3dcAuthenticationError(
                     "Couldn't authorize! Check username and password!"
                 )
 
@@ -128,7 +154,10 @@ class RscpClient:
     async def identify_device(self) -> dict:
         "Reads serial number and firmware version from device."
         try:
-            if not self.client.is_connected() or not self.client.is_authorized():
+            if (
+                not self._connection.is_connected()
+                or not self._connection.is_authorized()
+            ):
                 _LOGGER.info("Not connected, try to reconnect!")
                 await self._connect_and_login()
 
@@ -161,11 +190,12 @@ class RscpClient:
                     self.__add_identified_sg_ready(sg_ready)
                     continue
 
-        except ConnectionError as err:
-            raise Exception(f"Error: {err}") from err
+        except E3dcRscpError:
+            raise
         except Exception as err:
-            # TODO make Exception more specific
-            raise Exception(f"Identification failed! Rscp Key correct?") from err
+            raise E3dcIdentificationError(
+                "Identification failed! Rscp key correct?"
+            ) from err
 
         return
 
@@ -177,8 +207,8 @@ class RscpClient:
         Serialized via a lock because the protocol is strictly request/response.
         """
         async with self.__lock:
-            await self.client.send(RscpFrame().packFrame(rscpValuesToSend))
-            recv_buffer = await self.client.receive()
+            await self._connection.send(RscpFrame().packFrame(rscpValuesToSend))
+            recv_buffer = await self._connection.receive()
 
             if recv_buffer is None:
                 _LOGGER.warning("Recv buffer is None, decryption failure???")
@@ -235,7 +265,7 @@ class RscpClient:
     async def _fetch_data(self):
         _LOGGER.debug("Fetch data")
         try:
-            if not self.client.is_connected():
+            if not self._connection.is_connected():
                 _LOGGER.debug("Not connected, try to reconnect!")
                 await self._connect_and_login()
 
@@ -252,8 +282,8 @@ class RscpClient:
                 await self.__handlerPipeline.process(received_values)
 
         except Exception as err:
-            self.client.disconnect()
-            raise Exception(f"Error during data fetch: {err}") from err
+            self._connection.disconnect()
+            raise E3dcRscpError(f"Error during data fetch: {err}") from err
 
     async def fetch_data(self):
         "Creates RSCP frames and send it to the device, to fetch updated data!"

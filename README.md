@@ -7,6 +7,7 @@
 A [Home Assistant](https://www.home-assistant.io/) custom integration for **E3/DC** energy storage systems (S10 battery storage). It communicates directly with the device on your local network using the proprietary **RSCP** (Remote Storage Control  Protocol), giving you access to your battery storage, connected wallboxes and power meters — without going through the E3/DC cloud.
 
 ## Features
+
 - Autodetection of connected storage systems and auto commissioning of all wallboxes connected to the storage system.
 - Local polling over TCP (port `5033`) using Rijndael-256 encrypted RSCP frames — no cloud dependency.
 - Live readings for the main storage system:
@@ -74,25 +75,33 @@ The options flow lets you change these values and the polling interval (default:
 
 ## Architecture
 
+All device communication lives in `e3dc_rscp_api`, a self-contained package with no Home Assistant
+imports that is meant to become a standalone library. The integration above it never sees an RSCP
+tag, frame or connection — it only reads the plain dataclasses the api returns.
+
+This has been introduced to be prepared for a potential switch from a HACS integration to a core integration.
+
 ```
 Home Assistant Config Entry
     ↓
-E3dcRscpCoordinator (DataUpdateCoordinator)
+E3dcRscpCoordinator (DataUpdateCoordinator)          ── integration
     ├─ polls every 10s (configurable)
     └─ device info refresh every 60 min
-         ↓
-RscpClient
+    ↓                                        ↑ plain dataclasses
+─────────────────────────────────────────────────────────────────
+RscpClient                                           ── e3dc_rscp_api
     ├─ RscpConnection  →  RscpEncryption  →  RscpFrame / RscpValue
     └─ RscpHandlerPipeline
          ├─ StorageRscpModel   →  StorageDataModel
          ├─ WallboxRscpModel   →  WallboxDataModel
-         └─ SgReadyRscpModel
+         └─ SgReadyRscpModel   →  SgReadyDataModel
               ↓
          Sensor / Select / Number Entities
 ```
 
 - **Coordinator** (`coordinator.py`) drives all periodic fetches; entities subscribe through `CoordinatorEntity`.
-- **Handler pipeline** (`model/RscpHandlerPipeline.py`) routes raw RSCP frames to registered device models. Adding a new device type is a matter of implementing `RscpModelInterface` and registering it with the pipeline.
+- **Api boundary**: everything the integration needs is re-exported from `e3dc_rscp_api/__init__.py` — the client, the data models, and the `E3dcRscpError` hierarchy. Errors of the underlying protocol never leave the package. `tests/test_architecture.py` fails if the integration imports `rscp_lib` or mentions an RSCP tag, or if the api imports Home Assistant.
+- **Handler pipeline** (`e3dc_rscp_api/model/RscpHandlerPipeline.py`) routes raw RSCP frames to registered device models. Adding a new device type is a matter of implementing `RscpModelInterface` and registering it with the pipeline.
 - **RSCP protocol** is provided by the [`rscp_lib`](https://pypi.org/project/rscp_lib/) PyPI package — magic `0xDCE3`, timestamp header, variable-length binary frames, Rijndael-256 CBC encryption with IV chaining.
 
 ### Repository layout
@@ -100,11 +109,13 @@ RscpClient
 | Path | Purpose |
 |------|---------|
 | `custom_components/e3dc_rscp_connect/` | Integration root |
-| `├─ model/` | Device data models and handler pipeline |
+| `├─ e3dc_rscp_api/` | Communication layer (future standalone library) |
+| `│  ├─ client.py` | High-level RSCP client: connect, request, dispatch |
+| `│  ├─ exceptions.py` | Error hierarchy exposed to the integration |
+| `│  └─ model/` | Tag handling per device type and the resulting data models |
 | `├─ entities/` | Entity base class and sensor / select / number types |
 | `├─ sensor.py`, `select.py`, `number.py`, `switch.py` | HA platform entry points |
 | `├─ coordinator.py` | Polling coordinator |
-| `├─ client.py` | High-level RSCP client |
 | `└─ config_flow.py` | UI config & options flow |
 | `tests/` | Unit tests (mocked, no device required) |
 

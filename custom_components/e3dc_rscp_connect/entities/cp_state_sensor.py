@@ -6,7 +6,7 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.components.sensor.const import SensorDeviceClass
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
-from ..model.WallboxDataModel import WallboxDataModel  # noqa: TID252
+from ..e3dc_rscp_api import WallboxDataModel  # noqa: TID252
 from .entity import E3dcConnectEntity
 
 _LOGGER = logging.getLogger(__name__)

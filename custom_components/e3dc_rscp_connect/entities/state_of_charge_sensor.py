@@ -4,7 +4,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import PERCENTAGE
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
-from ..model.StorageDataModel import StorageDataModel  # noqa: TID252
+from ..e3dc_rscp_api import StorageDataModel  # noqa: TID252
 from .entity import E3dcConnectEntity
 
 

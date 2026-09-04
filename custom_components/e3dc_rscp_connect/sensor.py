@@ -19,7 +19,7 @@ from .entities import (
     StateOfChargeSensor,
     WallboxPowerSensor,
 )
-from .model.StorageDataModel import DeviceState
+from .e3dc_rscp_api import DeviceState
 
 DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
