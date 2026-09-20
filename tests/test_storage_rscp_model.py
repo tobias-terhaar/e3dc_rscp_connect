@@ -78,3 +78,36 @@ class TestEmsTagResponses:
             self._make_value("TAG_EMS_SOMETHING_ELSE", 1)
         )
         assert result is False
+
+
+class TestAdditionalPower:
+    def _make_value(self, tag_name, value):
+        v = Mock()
+        v.getTagName.return_value = tag_name
+        v.getValue.return_value = value
+        return v
+
+    def test_negative_device_value_becomes_positive_production(self, storage_model):
+        """The EMS reports additional production as negative — the model flips it."""
+        result = storage_model.handle_rscp_data(
+            self._make_value("TAG_EMS_POWER_ADD", -1500)
+        )
+
+        assert result is True
+        assert storage_model.get_model().powers.additional == 1500
+
+    def test_zero_stays_zero(self, storage_model):
+        storage_model.handle_rscp_data(self._make_value("TAG_EMS_POWER_ADD", 0))
+
+        assert storage_model.get_model().powers.additional == 0
+
+    def test_none_is_kept(self, storage_model):
+        storage_model.handle_rscp_data(self._make_value("TAG_EMS_POWER_ADD", None))
+
+        assert storage_model.get_model().powers.additional is None
+
+    def test_pv_power_keeps_its_sign(self, storage_model):
+        """Only the additional value is inverted, PV must stay untouched."""
+        storage_model.handle_rscp_data(self._make_value("TAG_EMS_POWER_PV", 2400))
+
+        assert storage_model.get_model().powers.pv == 2400
