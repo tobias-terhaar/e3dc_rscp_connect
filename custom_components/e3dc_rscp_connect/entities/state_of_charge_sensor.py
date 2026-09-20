@@ -1,6 +1,6 @@
 """Implements the battery state of charge sensor."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import PERCENTAGE
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
@@ -21,6 +21,7 @@ class StateOfChargeSensor(E3dcConnectEntity, SensorEntity):
 
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_device_class = SensorDeviceClass.BATTERY
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self):
