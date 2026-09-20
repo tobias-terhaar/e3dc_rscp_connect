@@ -188,7 +188,13 @@ class StorageRscpModel(RscpModelInterface):
             self.__model.powers.pv = value.getValue()
             return True
         if value.getTagName() == "TAG_EMS_POWER_ADD":
-            self.__model.powers.additional = value.getValue()
+            # The EMS reports the output of additional generators as a negative
+            # value, while every other production value (PV) is positive. Flip
+            # the sign so that production is positive everywhere in the model.
+            power_add = value.getValue()
+            self.__model.powers.additional = (
+                -power_add if power_add is not None else None
+            )
             return True
         if value.getTagName() == "TAG_EMS_POWER_WB_ALL":
             self.__model.powers.wallbox = value.getValue()

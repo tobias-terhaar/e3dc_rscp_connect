@@ -11,6 +11,7 @@ class EmsPowerModel:
     battery: int | None = None
     grid: int | None = None
     pv: int | None = None
+    # positive while the additional generators produce (the EMS reports it inverted)
     additional: int | None = None
     wallbox: int | None = None
     wallbox_pv: int | None = None

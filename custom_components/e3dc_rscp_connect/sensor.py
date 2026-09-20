@@ -25,6 +25,19 @@ DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_total_production_power(coordinator: E3dcRscpCoordinator):
+    """Sum of the internal PV power and the power of the additional generators.
+
+    Returns None while neither value has been read from the device yet; a single
+    missing value is treated as 0 so the sum stays usable.
+    """
+    powers = coordinator.storage.powers
+    values = [value for value in (powers.pv, powers.additional) if value is not None]
+    if not values:
+        return None
+    return sum(values)
+
+
 def get_inverter_mppt_power(
     coordinator: E3dcRscpCoordinator, inverter: int, mppt_index: int
 ):
@@ -126,6 +139,20 @@ async def async_setup_entry(
             config_entry,
             "Additional Production Energy",
             data_getter=lambda: coordinator.storage.powers.additional,
+        ),
+        #
+        # Combined production of the internal inverter and the additional generators
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "Total Production Power",
+            data_getter=lambda: get_total_production_power(coordinator),
+        ),
+        EnergySensor(
+            coordinator,
+            config_entry,
+            "Total Production Energy",
+            data_getter=lambda: get_total_production_power(coordinator),
         ),
         #
         # Wallbox sensors (EMS)
