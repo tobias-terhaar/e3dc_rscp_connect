@@ -184,7 +184,7 @@ class WallboxRscpModel(RscpModelInterface):
             logger.debug("WB POWER L1: %s", power_l1.toString())
             power_total += power_l1.getValue()
 
-        power_l2 = wb_data.get_child("TAG_WB_PM_POWER_L3")
+        power_l2 = wb_data.get_child("TAG_WB_PM_POWER_L2")
         if power_l2:
             logger.debug("WB POWER L2: %s", power_l2.toString())
             power_total += power_l2.getValue()
