@@ -10,6 +10,9 @@ _LOGGER = logging.getLogger(__name__)
 class RscpHandlerPipeline:
     def __init__(self):
         self._handlers = []
+        # tag names already reported as unhandled, so each one is only warned
+        # about once instead of on every poll cycle
+        self._unhandled_tags = set()
 
     def add_handler(self, handler: RscpModelInterface):
         self._handlers.append(handler)
@@ -29,7 +32,19 @@ class RscpHandlerPipeline:
                     break
 
             if not handled:
-                _LOGGER.warning("Unhandled RSCP tag: %s", value.getTagName())
+                self.__report_unhandled(value.getTagName())
+
+    def __report_unhandled(self, tag_name):
+        """Warns about an unhandled tag once, then keeps it at debug level."""
+        if tag_name in self._unhandled_tags:
+            _LOGGER.debug("Unhandled RSCP tag: %s", tag_name)
+            return
+
+        self._unhandled_tags.add(tag_name)
+        _LOGGER.warning(
+            "Unhandled RSCP tag: %s. Further occurrences are logged at debug level.",
+            tag_name,
+        )
 
     async def collect_tags(self) -> list[RscpValue]:
         """Collect rscp tags from all registered handlers."""

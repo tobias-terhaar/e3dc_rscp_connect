@@ -27,6 +27,8 @@ class StorageRscpModel(RscpModelInterface):
             sw_version=sw_version,
         )
         self.__pvi_identified = False
+        # battery slots that answered without usable data, reported only once
+        self.__incomplete_batteries: set[tuple[int | None, str]] = set()
 
     def __eq__(self, other):
         "Comparing two StorageRscpModel instances."
@@ -298,52 +300,69 @@ class StorageRscpModel(RscpModelInterface):
             ),
         ]
 
+    def __report_incomplete_battery_data(self, index, reason: str):
+        """Reports a battery slot that answered without usable data.
+
+        A storage with fewer batteries than requested answers for the missing
+        slots on every poll cycle. Report each slot once, then stay quiet -
+        otherwise the log fills up with one line per cycle.
+        """
+        if (index, reason) in self.__incomplete_batteries:
+            logger.debug("No data for battery %s: %s", index, reason)
+            return
+
+        self.__incomplete_batteries.add((index, reason))
+        logger.info(
+            "No data for battery %s: %s. This is expected for a battery slot that is "
+            "not equipped; further occurrences are logged at debug level.",
+            index,
+            reason,
+        )
+
     def __handle_rscp_tags_for_battery(self, container: RscpValue) -> bool:
         """hanlde all the rscp tags for the battery."""
 
-        if container.getTagName() == "TAG_BAT_DATA":
-            index = container.get_child("TAG_BAT_INDEX")
+        if container.getTagName() != "TAG_BAT_DATA":
+            return False
 
-            if index is None:
-                return False
+        # From here on the container belongs to us, so it is always claimed -
+        # even when it carries no usable data. Returning False would make the
+        # handler pipeline log it as an unhandled tag on every poll cycle.
 
-            index = index.getValue()
-            if not isinstance(index, int):
-                logger.warning("no index found in TAG_BAT_DATA, can't handle data")
-                return False
+        index = container.get_child("TAG_BAT_INDEX")
+        index = index.getValue() if index is not None else None
 
-            states = container.get_child("TAG_BAT_DEVICE_STATE")
-            if states is None:
-                logger.warning(
-                    "no TAG_BAT_DEVICE_STATE found for bat %d",
-                    index,
-                )
-                return False
-            connected = states.get_child("TAG_BAT_DEVICE_CONNECTED")
-            working = states.get_child("TAG_BAT_DEVICE_WORKING")
-
-            if connected is None or working is None:
-                logger.warning(
-                    "CONNECTED or WORKING was not received in BAT_DEVICE_STATE for bat %d",
-                    index,
-                )
-                return False
-
-            bat_state = self.__model.device_states.battery.get(index)
-            if bat_state is None:
-                bat_state = DeviceState()
-                self.__model.device_states.battery[index] = bat_state
-
-            connected = connected.getValue()
-
-            bat_state.connected = bool(connected)
-
-            working = working.getValue()
-            bat_state.working = bool(working)
-
+        if not isinstance(index, int):
+            self.__report_incomplete_battery_data(index, "no TAG_BAT_INDEX")
             return True
 
-        return False
+        states = container.get_child("TAG_BAT_DEVICE_STATE")
+        if states is None:
+            self.__report_incomplete_battery_data(index, "no TAG_BAT_DEVICE_STATE")
+            return True
+
+        connected = states.get_child("TAG_BAT_DEVICE_CONNECTED")
+        working = states.get_child("TAG_BAT_DEVICE_WORKING")
+
+        if connected is None or working is None:
+            self.__report_incomplete_battery_data(
+                index, "no CONNECTED or WORKING in TAG_BAT_DEVICE_STATE"
+            )
+            return True
+
+        bat_state = self.__model.device_states.battery.get(index)
+        if bat_state is None:
+            bat_state = DeviceState()
+            self.__model.device_states.battery[index] = bat_state
+
+        connected = connected.getValue()
+
+        bat_state.connected = bool(connected)
+
+        working = working.getValue()
+        bat_state.working = bool(working)
+
+        return True
 
     async def send_battery_remote_control(self, power_w: int, send_and_receive):
         """Sends a battery remote control power setpoint via TAG_EMS_REQ_SET_POWER.
