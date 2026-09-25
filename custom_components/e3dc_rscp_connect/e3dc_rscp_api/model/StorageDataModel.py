@@ -42,6 +42,25 @@ class PvInverterData:
     power_mppt: dict[int, int | None] = field(default_factory=dict)
 
 
+# E3DC powermeter "TAG_PM_TYPE" values observed in the wild. Only ROOT (the
+# main grid meter, already covered by TAG_EMS_POWER_GRID) and
+# ADDITIONAL_CONSUMPTION (extra CT clamps on individual loads, e.g. a heat
+# pump) are relevant here; other values are stored but not interpreted.
+PM_TYPE_ROOT = 1
+PM_TYPE_ADDITIONAL_CONSUMPTION = 4
+
+
+@dataclass
+class PowerMeterData:
+    "Class holds the data of one E3DC powermeter (a physical CT clamp)."
+
+    type: int | None = None
+    # Sum of TAG_PM_POWER_L1/L2/L3, in Watt. Positive = consumption on the
+    # monitored circuit, matching the sign convention of the other power
+    # values in this model.
+    power: float | None = None
+
+
 @dataclass
 class StorageDataModel:
     "The dataclass holding the information."
@@ -65,3 +84,5 @@ class StorageDataModel:
     emergency_power_state: int | None = None
 
     inverters: dict[int, PvInverterData] = field(default_factory=dict)
+
+    powermeters: dict[int, PowerMeterData] = field(default_factory=dict)
