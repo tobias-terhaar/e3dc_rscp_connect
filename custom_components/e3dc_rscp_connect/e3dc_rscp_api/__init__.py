@@ -24,9 +24,12 @@ from .exceptions import (
 )
 from .model.SgReadyDataModel import SgReadyDataModel
 from .model.StorageDataModel import (
+    PM_TYPE_ADDITIONAL_CONSUMPTION,
+    PM_TYPE_ROOT,
     DeviceState,
     DeviceStates,
     EmsPowerModel,
+    PowerMeterData,
     PvInverterData,
     StorageDataModel,
 )
@@ -40,6 +43,9 @@ __all__ = [
     "E3dcIdentificationError",
     "E3dcRscpError",
     "EmsPowerModel",
+    "PM_TYPE_ADDITIONAL_CONSUMPTION",
+    "PM_TYPE_ROOT",
+    "PowerMeterData",
     "PvInverterData",
     "RscpClient",
     "SgReadyDataModel",

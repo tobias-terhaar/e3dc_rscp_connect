@@ -4,7 +4,12 @@ import logging
 
 from rscp_lib.RscpValue import RscpValue
 from .RscpModelInterface import RscpModelInterface
-from .StorageDataModel import PvInverterData, StorageDataModel, DeviceState
+from .StorageDataModel import (
+    PowerMeterData,
+    PvInverterData,
+    StorageDataModel,
+    DeviceState,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +32,7 @@ class StorageRscpModel(RscpModelInterface):
             sw_version=sw_version,
         )
         self.__pvi_identified = False
+        self.__pm_identified = False
 
     def __eq__(self, other):
         "Comparing two StorageRscpModel instances."
@@ -110,6 +116,16 @@ class StorageRscpModel(RscpModelInterface):
             _list.extend(self.__create_rscp_tags_for_inverter(index))
         return _list
 
+    def __get_ident_tags_for_pm(self):
+        # Same probing approach as __get_ident_tags_for_pvi: E3DC systems
+        # don't expose how many powermeters exist ahead of time, so try a
+        # generous index range and keep whichever ones answer without an
+        # error (handled in __handle_rscp_tags_for_powermeter).
+        _list = []
+        for index in range(7):
+            _list.extend(self.__create_rscp_tags_for_powermeter(index))
+        return _list
+
     def get_rscp_tags(self) -> list[RscpValue]:
         """Returns all tags used to get informations from device!
 
@@ -125,6 +141,12 @@ class StorageRscpModel(RscpModelInterface):
         else:
             for x in self.__model.inverters:
                 tags.extend(self.__create_rscp_tags_for_inverter(x))
+        if not self.__pm_identified:
+            tags.extend(self.__get_ident_tags_for_pm())
+            self.__pm_identified = True
+        else:
+            for x in self.__model.powermeters:
+                tags.extend(self.__create_rscp_tags_for_powermeter(x))
         tags.extend(self.__get_rscp_tags_for_battery())
         return tags
 
@@ -148,6 +170,8 @@ class StorageRscpModel(RscpModelInterface):
             return self.__handle_rcsp_tags_for_ems(container)
         if container.getTagName() == "TAG_PVI_DATA":
             return self.__hanlde_rscp_tags_for_pvi(container)
+        if container.getTagName() == "TAG_PM_DATA":
+            return self.__handle_rscp_tags_for_powermeter(container)
         if container.getTagName() == "TAG_BAT_DATA":
             return self.__handle_rscp_tags_for_battery(container)
         return False
@@ -276,6 +300,69 @@ class StorageRscpModel(RscpModelInterface):
                 inverter.power_mppt[mppt_index] = (
                     power_value.getValue() if power_value is not None else None
                 )
+
+        return True
+
+    def __create_rscp_tags_for_powermeter(self, index: int) -> list[RscpValue]:
+        return [
+            RscpValue.construct_rscp_value(
+                "TAG_PM_REQ_DATA",
+                [
+                    ("TAG_PM_INDEX", index),
+                    ("TAG_PM_REQ_TYPE", None),
+                    ("TAG_PM_REQ_POWER_L1", None),
+                    ("TAG_PM_REQ_POWER_L2", None),
+                    ("TAG_PM_REQ_POWER_L3", None),
+                ],
+            )
+        ]
+
+    def __handle_rscp_tags_for_powermeter(self, container: RscpValue) -> bool:
+        pm_index = container.get_child("TAG_PM_INDEX")
+        if pm_index is None:
+            value = container.get_child("TAG_PM_REQ_INDEX")
+            if value is not None:
+                logger.critical(
+                    "No TAG_PM_REQ_INDEX in container, errorcode: %d", value.getValue()
+                )
+            return False
+
+        pm_index = pm_index.getValue()
+
+        # Mirrors the PVI error pattern above: on error the device echoes
+        # the request tag itself back as an error-typed child instead of
+        # the requested data fields.
+        error = container.get_child("TAG_PM_REQ_DATA")
+        if error is not None:
+            logger.debug(
+                "No data for powermeter: %d, errorcode: %d",
+                pm_index,
+                error.getValue(),
+            )
+            # even if we detected an error, means we handled this tag ;)
+            return True
+
+        pm = self.__model.powermeters.get(pm_index, None)
+        if pm is None:
+            pm = PowerMeterData()
+            self.__model.powermeters[pm_index] = pm
+            logger.info("Added powermeter on index %d to storage", pm_index)
+
+        pm_type = container.get_child("TAG_PM_TYPE")
+        if pm_type is not None:
+            pm.type = pm_type.getValue()
+
+        phase_values = [
+            tag.getValue()
+            for tag in (
+                container.get_child("TAG_PM_POWER_L1"),
+                container.get_child("TAG_PM_POWER_L2"),
+                container.get_child("TAG_PM_POWER_L3"),
+            )
+            if tag is not None and tag.getValue() is not None
+        ]
+        if phase_values:
+            pm.power = sum(phase_values)
 
         return True
 
