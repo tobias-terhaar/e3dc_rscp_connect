@@ -17,6 +17,7 @@ from .entities import (
     PowerSensor,
     SGReadySensor,
     StateOfChargeSensor,
+    WallboxDailyEnergySensor,
     WallboxEnergySensor,
     WallboxPowerSensor,
 )
@@ -273,7 +274,17 @@ async def async_setup_entry(
             WallboxEnergySensor(
                 coordinator,
                 config_entry,
-                "Charged energy",
+                "Total Charged energy",
+                wallbox.index,
+                lambda wallbox=wallbox: wallbox.power,
+            )
+            for wallbox in coordinator.wallboxes
+        ],
+        *[
+            WallboxDailyEnergySensor(
+                coordinator,
+                config_entry,
+                "Daily charged energy",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.power,
             )
