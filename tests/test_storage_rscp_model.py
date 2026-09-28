@@ -192,3 +192,112 @@ class TestBatteryDataHandling:
         container.get_child.return_value = None
 
         assert storage_model.handle_rscp_data(container) is False
+
+
+class TestSystemStatus:
+    """The EMS system status register, see issue #10."""
+
+    def _make_value(self, value, tag_name="TAG_EMS_SYS_STATUS", is_error=False):
+        v = Mock()
+        v.getTagName.return_value = tag_name
+        v.getValue.return_value = value
+        v.isError = is_error
+        return v
+
+    def test_register_is_requested(self, storage_model):
+        assert "TAG_EMS_REQ_SYS_STATUS" in _tag_names(storage_model.get_rscp_tags())
+
+    def test_fields_default_to_none(self, storage_model):
+        status = storage_model.get_model().system_status
+        assert status.raw is None
+        assert status.power_derated is None
+
+    @pytest.mark.parametrize(
+        "bit,field",
+        [
+            (0, "battery_charging_locked"),
+            (1, "battery_discharging_locked"),
+            (2, "emergency_power_possible"),
+            (3, "weather_based_charging"),
+            (4, "power_derated"),
+            (5, "charge_lock_time_active"),
+            (6, "discharge_lock_time_active"),
+        ],
+    )
+    def test_single_bit_sets_only_its_own_field(self, storage_model, bit, field):
+        result = storage_model.handle_rscp_data(self._make_value(1 << bit))
+
+        assert result is True
+        status = storage_model.get_model().system_status
+        assert getattr(status, field) is True
+        assert sum(
+            1
+            for _, other in TestSystemStatus._fields()
+            if getattr(status, other) is True
+        ) == 1
+
+    @staticmethod
+    def _fields():
+        return [
+            (0, "battery_charging_locked"),
+            (1, "battery_discharging_locked"),
+            (2, "emergency_power_possible"),
+            (3, "weather_based_charging"),
+            (4, "power_derated"),
+            (5, "charge_lock_time_active"),
+            (6, "discharge_lock_time_active"),
+        ]
+
+    def test_all_bits_cleared(self, storage_model):
+        storage_model.handle_rscp_data(self._make_value(0))
+
+        status = storage_model.get_model().system_status
+        assert status.raw == 0
+        assert all(getattr(status, field) is False for _, field in self._fields())
+
+    def test_combined_bits(self, storage_model):
+        # derating plus discharge lock time
+        storage_model.handle_rscp_data(self._make_value(0b1010000))
+
+        status = storage_model.get_model().system_status
+        assert status.power_derated is True
+        assert status.discharge_lock_time_active is True
+        assert status.battery_charging_locked is False
+
+    def test_unknown_higher_bits_are_ignored(self, storage_model):
+        storage_model.handle_rscp_data(self._make_value(0x80000010))
+
+        status = storage_model.get_model().system_status
+        assert status.raw == 0x80000010
+        assert status.power_derated is True
+
+    def test_unusable_value_keeps_previous_state(self, storage_model, caplog):
+        storage_model.handle_rscp_data(self._make_value(1 << 4))
+
+        with caplog.at_level(logging.INFO):
+            result = storage_model.handle_rscp_data(self._make_value(None))
+
+        assert result is True
+        assert storage_model.get_model().system_status.power_derated is True
+        assert "TAG_EMS_SYS_STATUS" in caplog.text
+
+    def test_error_answer_leaves_the_status_unknown(self, storage_model, caplog):
+        """A storage that does not know the tag answers with an error code."""
+        with caplog.at_level(logging.DEBUG):
+            result = storage_model.handle_rscp_data(
+                self._make_value(3, is_error=True)
+            )
+
+        status = storage_model.get_model().system_status
+        assert result is True
+        assert status.raw is None
+        assert status.power_derated is None
+        assert "TAG_EMS_SYS_STATUS" in caplog.text
+
+    def test_error_answer_is_reported_only_once(self, storage_model, caplog):
+        with caplog.at_level(logging.DEBUG):
+            for _ in range(5):
+                storage_model.handle_rscp_data(self._make_value(3, is_error=True))
+
+        above_debug = [r for r in caplog.records if r.levelno > logging.DEBUG]
+        assert len(above_debug) == 1

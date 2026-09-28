@@ -1,0 +1,111 @@
+{
+  "config": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "user": {
+        "title": "E3DC Configuration",
+        "description": "Choose the login method and enter your E3/DC credentials. A local login always uses the fixed user local.user, so the username can stay empty.",
+        "data": {
+          "login_type": "Login method",
+          "host": "IP Address",
+          "port": "Port",
+          "username": "Username (portal login only)",
+          "password": "Password",
+          "key": "RSCP Encryption key"
+        }
+      },
+      "discovery_confirm": {
+        "title": "E3DC device discovered",
+        "description": "Device {name} was discovered at {host}:{port}. Choose the login method and enter the credentials to complete setup. A local login always uses the fixed user local.user, so the username can stay empty.",
+        "data": {
+          "login_type": "Login method",
+          "username": "Username (portal login only)",
+          "password": "Password",
+          "key": "RSCP Encryption key"
+        }
+      },
+      "reauth_confirm": {
+        "title": "E3DC Configuration",
+        "description": "The credentials for {name} ({host}) were rejected. Choose the login method and enter the credentials again.",
+        "data": {
+          "login_type": "Login method",
+          "username": "Username (portal login only)",
+          "password": "Password",
+          "key": "RSCP Encryption key"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "Failed to connect",
+      "reauth_successful": "Re-authentication was successful"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "username_required": "A portal login needs a username"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "E3DC Configuration",
+        "description": "Choose the login method and enter your E3/DC credentials. A local login always uses the fixed user local.user, so the username can stay empty.",
+        "data": {
+          "login_type": "Login method",
+          "host": "IP Address",
+          "port": "Port",
+          "username": "Username (portal login only)",
+          "password": "Password",
+          "key": "RSCP Encryption key",
+          "update_interval": "Update interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication",
+      "username_required": "A portal login needs a username"
+    }
+  },
+  "selector": {
+    "login_type": {
+      "options": {
+        "local": "Local user",
+        "portal": "Portal user"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "wallbox_status": {
+        "name": "Wallbox Status",
+        "state": {
+          "cable_disconnected": "Cable disconnected",
+          "cable_connected": "Cable connected",
+          "charging": "Charging",
+          "error": "Error"
+        }
+      },
+      "sgready_status": {
+        "name": "SG Ready Status",
+        "state": {
+          "block": "Block",
+          "normal": "Normal",
+          "go": "Go",
+          "force_go": "Force Go"
+        }
+      },
+      "ep_status": {
+        "name": "Emergency Power Status",
+        "state": {
+          "not_possible": "Not possible",
+          "active": "Active",
+          "not_active": "Not active",
+          "not_available": "Not available",
+          "island_state": "Switch in island state"
+        }
+      }
+    }
+  }
+}

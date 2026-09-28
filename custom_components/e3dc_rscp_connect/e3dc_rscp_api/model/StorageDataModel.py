@@ -18,6 +18,26 @@ class EmsPowerModel:
 
 
 @dataclass
+class SystemStatusModel:
+    """The bits of the EMS system status register (TAG_EMS_SYS_STATUS).
+
+    Every flag stays None until the register has been read, so a storage that
+    does not answer the tag can be told apart from one that reports all bits
+    as cleared.
+    """
+
+    raw: int | None = None
+
+    battery_charging_locked: bool | None = None  # bit 0
+    battery_discharging_locked: bool | None = None  # bit 1
+    emergency_power_possible: bool | None = None  # bit 2
+    weather_based_charging: bool | None = None  # bit 3
+    power_derated: bool | None = None  # bit 4
+    charge_lock_time_active: bool | None = None  # bit 5
+    discharge_lock_time_active: bool | None = None  # bit 6
+
+
+@dataclass
 class DeviceState:
     "Data class to hold states of the storage devices."
 
@@ -63,5 +83,7 @@ class StorageDataModel:
     self_consumption: float | None = None
 
     emergency_power_state: int | None = None
+
+    system_status: SystemStatusModel = field(default_factory=SystemStatusModel)
 
     inverters: dict[int, PvInverterData] = field(default_factory=dict)
