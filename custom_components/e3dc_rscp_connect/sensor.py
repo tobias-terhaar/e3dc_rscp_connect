@@ -17,6 +17,7 @@ from .entities import (
     PowerSensor,
     SGReadySensor,
     StateOfChargeSensor,
+    WallboxEnergySensor,
     WallboxPowerSensor,
 )
 from .e3dc_rscp_api import DeviceState
@@ -263,6 +264,16 @@ async def async_setup_entry(
                 coordinator,
                 config_entry,
                 "Current power",
+                wallbox.index,
+                lambda wallbox=wallbox: wallbox.power,
+            )
+            for wallbox in coordinator.wallboxes
+        ],
+        *[
+            WallboxEnergySensor(
+                coordinator,
+                config_entry,
+                "Charged energy",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.power,
             )
