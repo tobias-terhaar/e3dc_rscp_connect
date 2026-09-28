@@ -1,6 +1,10 @@
 """Implements the power sensor entity."""
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import UnitOfPower
 
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
@@ -34,6 +38,7 @@ class WallboxPowerSensor(E3dcConnectEntity, SensorEntity):
 
         self._attr_native_unit_of_measurement = UnitOfPower.WATT
         self._attr_device_class = SensorDeviceClass.POWER
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._index = index
 
     @property
