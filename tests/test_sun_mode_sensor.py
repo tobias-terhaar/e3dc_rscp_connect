@@ -63,7 +63,7 @@ class TestSunModeSensor:
         self, sun_mode_sensor, mock_coordinator, mock_entry, mock_wallbox_ident
     ):
         """Test sensor initialization."""
-        assert sun_mode_sensor._attr_name == "Lademodus"
+        assert sun_mode_sensor._attr_name == "Sun mode"
         assert sun_mode_sensor._attr_unique_id == "s10_123456789012_test_wallbox_sun_mode_state"
         assert sun_mode_sensor.coordinator == mock_coordinator
         assert sun_mode_sensor._entry == mock_entry

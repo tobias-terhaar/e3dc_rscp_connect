@@ -29,9 +29,10 @@ class WallboxDailyEnergySensor(WallboxEnergySensor):
         name: str,
         index: int,
         data_getter: Callable[[], int | None],
+        key: str | None = None,
     ) -> None:
         "Inits the sensor for the wallbox on the given index."
-        super().__init__(coordinator, entry, name, index, data_getter)
+        super().__init__(coordinator, entry, name, index, data_getter, key)
 
         # A counter that restarts every day is a TOTAL, not a TOTAL_INCREASING:
         # last_reset tells the statistics engine when the drop to 0 is expected

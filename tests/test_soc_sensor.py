@@ -42,7 +42,7 @@ def test_state_of_charge_sensor_value(mock_entry, mock_storage) -> None:
 
     # Assert
     assert value == 85
-    assert sensor._attr_name == "Ladezustand"
+    assert sensor._attr_name == "State of charge"
     assert sensor._attr_native_unit_of_measurement == "%"
     assert sensor._attr_device_class.value == "battery"
     assert sensor._attr_unique_id == "s10_123456789012_soc"

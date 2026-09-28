@@ -52,9 +52,10 @@ class WallboxSessionEnergySensor(WallboxEnergySensor):
         index: int,
         data_getter: Callable[[], int | None],
         state_getter: Callable[[], str | None],
+        key: str | None = None,
     ) -> None:
         "Inits the sensor for the wallbox on the given index."
-        super().__init__(coordinator, entry, name, index, data_getter)
+        super().__init__(coordinator, entry, name, index, data_getter, key)
 
         self._state_getter = state_getter
 

@@ -15,7 +15,7 @@ class StateOfChargeSensor(E3dcConnectEntity, SensorEntity):
         "Init the sensor."
         super().__init__(coordinator, entry)
 
-        self._attr_name = "Ladezustand"
+        self._attr_name = "State of charge"
         serial = coordinator.storage.serial.lower().replace("-", "_")
         self._attr_unique_id = f"{serial}_soc"
 

@@ -22,7 +22,7 @@ class SunModeSensor(SelectEntity, E3dcConnectEntity):
         self._entry = entry
         self.coordinator = coordinator
 
-        self._attr_name = "Lademodus"
+        self._attr_name = "Sun mode"
         if wallbox.device_name is None:
             wallbox.device_name = "Wallbox unnamed!"
 

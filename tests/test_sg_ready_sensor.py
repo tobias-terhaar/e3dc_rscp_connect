@@ -44,7 +44,7 @@ class TestSGReadySensor:
 
     def test_initialization(self, sg_ready_sensor, mock_coordinator, mock_entry):
         """Test sensor initialization."""
-        assert sg_ready_sensor._attr_name == "SG Ready Status"
+        assert sg_ready_sensor._attr_name == "SG Ready status"
         assert sg_ready_sensor._attr_unique_id == "s10_123456789012_sg_ready_state"
         assert sg_ready_sensor.coordinator == mock_coordinator
         assert sg_ready_sensor._entry == mock_entry

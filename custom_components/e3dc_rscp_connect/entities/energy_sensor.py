@@ -25,8 +25,13 @@ class EnergySensor(E3dcConnectEntity, SensorEntity, RestoreEntity):
         negative_direction: bool = False,
         sub_device_type: str | None = None,
         sub_device_index: str | None = None,
+        key: str | None = None,
     ) -> None:
-        """Inits the PowerSensor with a location. The location is used to create the attribute name and the unique id."""
+        """Inits the PowerSensor with a location. The location is used to create the attribute name and the unique id.
+
+        `key` identifies the sensor in its unique id. It defaults to the name,
+        so pass it explicitly to keep the id stable across a rename.
+        """
         super().__init__(coordinator, entry, sub_device_type, sub_device_index)
 
         if data_getter is None and sensor_value_id is None:
@@ -39,7 +44,7 @@ class EnergySensor(E3dcConnectEntity, SensorEntity, RestoreEntity):
         self._attr_name = name
 
         serial = coordinator.storage.serial.lower().replace("-", "_")
-        name = name.lower().replace(" ", "_")
+        name = key or name.lower().replace(" ", "_")
         self._attr_unique_id = f"{serial}_{name}_energy"
 
         self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR

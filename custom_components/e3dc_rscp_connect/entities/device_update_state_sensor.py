@@ -26,7 +26,7 @@ class DeviceUpdateStateSensor(E3dcConnectEntity, SensorEntity):
 
         self.__data_get_func = data_get_func
 
-        self._attr_name = f"{device} {index} Device Update State"
+        self._attr_name = f"{device} {index} update state"
         self._attr_unique_id = f"{serial}_{device.lower()}{index}_device_update_state"
 
         self._attr_device_class = SensorDeviceClass.ENUM

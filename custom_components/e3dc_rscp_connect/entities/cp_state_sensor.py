@@ -11,6 +11,19 @@ from .entity import E3dcConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+# The CP state the wallbox reports, mapped onto the states of this sensor.
+CP_STATES = {
+    "A": "cable_disconnected",
+    "A1": "cable_disconnected",
+    "B": "cable_connected",
+    "B1": "cable_connected",
+    "B2": "cable_connected",
+    "C": "charging",
+    "C1": "charging",
+    "C2": "charging",
+    "F": "error",
+}
+
 
 class CpStateSensor(E3dcConnectEntity, SensorEntity):
     """This sensor is used to represent the charging state of a wallbox."""
@@ -28,8 +41,10 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
         self._entry = entry
         self.coordinator = coordinator
         self._index = wallbox_id
+        # cp states already warned about, see __report_unexpected
+        self.__unexpected_states = set()
 
-        self._attr_name = "Wallbox Status"
+        self._attr_name = "Charging state"
         serial = coordinator.storage.serial.lower().replace("-", "_")
         wallbox_name = wallbox.device_name.lower().replace(" ", "_")
         self._attr_unique_id = f"{serial}_{wallbox_name}_wallbox_state"
@@ -50,23 +65,29 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
 
         if not wallbox:
             return None
+
         cp_state = wallbox.cp_state
-        _LOGGER.warning(f"CP_State: {cp_state}")
-        states = {
-            "A": "cable_disconnected",
-            "A1": "cable_disconnected",
-            "B": "cable_connected",
-            "B1": "cable_connected",
-            "B2": "cable_connected",
-            "C": "charging",
-            "C1": "charging",
-            "C2": "charging",
-            "F": "error",
-        }
+        _LOGGER.debug("CP state of wallbox %s: %s", self._index, cp_state)
 
-        state = states.get(cp_state)
+        state = CP_STATES.get(cp_state)
 
-        if state is None:
-            _LOGGER.warning(f"unexpected cp state: {cp_state}")
+        if state is None and cp_state is not None:
+            self.__report_unexpected(cp_state)
 
         return state
+
+    def __report_unexpected(self, cp_state):
+        """Warns about a state we cannot map, once per state.
+
+        native_value runs on every poll cycle, so warning every time would
+        fill the log with one line per cycle.
+        """
+        if cp_state in self.__unexpected_states:
+            _LOGGER.debug("Unexpected cp state: %s", cp_state)
+            return
+
+        self.__unexpected_states.add(cp_state)
+        _LOGGER.warning(
+            "Unexpected cp state: %s. Further occurrences are logged at debug level.",
+            cp_state,
+        )

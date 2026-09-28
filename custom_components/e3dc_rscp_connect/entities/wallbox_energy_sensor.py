@@ -21,8 +21,13 @@ class WallboxEnergySensor(EnergySensor):
         name: str,
         index: int,
         data_getter: Callable[[], int | None],
+        key: str | None = None,
     ) -> None:
-        "Inits the sensor for the wallbox on the given index."
+        """Inits the sensor for the wallbox on the given index.
+
+        `key` identifies the sensor in its unique id. It defaults to the name,
+        so pass it explicitly to keep the id stable across a rename.
+        """
         super().__init__(
             coordinator,
             entry,
@@ -38,7 +43,7 @@ class WallboxEnergySensor(EnergySensor):
         wallbox_name = coordinator.get_wallbox(index).device_name.lower().replace(
             " ", "_"
         )
-        sensor_name = name.lower().replace(" ", "_")
+        sensor_name = key or name.lower().replace(" ", "_")
         self._attr_unique_id = f"{serial}_{wallbox_name}_{index}_{sensor_name}_energy"
 
         self._index = index

@@ -1,5 +1,6 @@
 "This file defines tests for CpStateSensor."
 
+import logging
 from pathlib import Path
 import sys
 
@@ -54,7 +55,7 @@ def test_cp_state_sensor_attributes(mock_entry) -> None:
         wallbox=wallbox_ident,
     )
 
-    assert sensor.name == "Wallbox Status"
+    assert sensor.name == "Charging state"
     assert sensor.unique_id == "s10_123456789012_wallbox_1_wallbox_state"
 
 
@@ -116,3 +117,65 @@ def test_cp_state_sensor_missing_value(mock_entry) -> None:
     )
 
     assert sensor.native_value == None
+
+
+def _sensor_and_wallbox(mock_entry):
+    """Builds a sensor together with the wallbox whose state it reads."""
+    wallbox = WallboxDataModel(1)
+    coordinator = MockCoordinator(
+        data={"wallbox_1": wallbox, "storage": {"serial": "S10-123456789012"}}
+    )
+    sensor = CpStateSensor(
+        coordinator=coordinator,
+        entry=mock_entry,
+        wallbox_id=1,
+        wallbox=MockWallboxIdent("Wallbox 1"),
+    )
+    return sensor, wallbox
+
+
+def test_known_state_logs_nothing_above_debug(mock_entry, caplog) -> None:
+    """native_value runs on every poll cycle, so it must stay quiet."""
+    sensor, wallbox = _sensor_and_wallbox(mock_entry)
+    wallbox.cp_state = "C"
+
+    with caplog.at_level(logging.DEBUG):
+        for _ in range(5):
+            assert sensor.native_value == "charging"
+
+    assert [r for r in caplog.records if r.levelno > logging.DEBUG] == []
+
+
+def test_missing_state_is_not_reported_as_unexpected(mock_entry, caplog) -> None:
+    """No data yet is normal right after startup, not a wrong state."""
+    sensor, wallbox = _sensor_and_wallbox(mock_entry)
+    wallbox.cp_state = None
+
+    with caplog.at_level(logging.DEBUG):
+        assert sensor.native_value is None
+
+    assert [r for r in caplog.records if r.levelno > logging.DEBUG] == []
+
+
+def test_unexpected_state_warns_once(mock_entry, caplog) -> None:
+    sensor, wallbox = _sensor_and_wallbox(mock_entry)
+    wallbox.cp_state = "Z"
+
+    with caplog.at_level(logging.DEBUG):
+        for _ in range(5):
+            assert sensor.native_value is None
+
+    warnings = [r for r in caplog.records if r.levelno == logging.WARNING]
+    assert len(warnings) == 1
+    assert "Z" in warnings[0].getMessage()
+
+
+def test_every_unexpected_state_is_warned_about_once(mock_entry, caplog) -> None:
+    sensor, wallbox = _sensor_and_wallbox(mock_entry)
+
+    with caplog.at_level(logging.WARNING):
+        for state in ("Z", "Y", "Z", "Y"):
+            wallbox.cp_state = state
+            sensor.native_value
+
+    assert len([r for r in caplog.records if r.levelno == logging.WARNING]) == 2

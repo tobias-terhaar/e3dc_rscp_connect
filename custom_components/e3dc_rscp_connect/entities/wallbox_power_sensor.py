@@ -22,14 +22,19 @@ class WallboxPowerSensor(E3dcConnectEntity, SensorEntity):
         name: str,
         index,
         data_getter,
+        key: str | None = None,
     ) -> None:
-        """Inits the PowerSensor with a location. The location is used to create the attribute name and the unique id."""
+        """Inits the PowerSensor with a location. The location is used to create the attribute name and the unique id.
+
+        `key` identifies the sensor in its unique id. It defaults to the name,
+        so pass it explicitly to keep the id stable across a rename.
+        """
         super().__init__(coordinator, entry, "Wallbox", index)
         self._attr_name = name
         self.__data_getter = data_getter
         serial = coordinator.storage.serial.lower().replace("-", "_")
 
-        name = name.lower().replace(" ", "_")
+        name = key or name.lower().replace(" ", "_")
 
         wallbox = coordinator.get_wallbox(index)
         wallbox_name = wallbox.device_name.lower().replace(" ", "_")

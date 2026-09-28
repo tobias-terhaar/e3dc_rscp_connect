@@ -25,7 +25,7 @@ class DeviceStateSensor(E3dcConnectEntity, SensorEntity):
 
         self.__data_get_func = data_get_func
 
-        self._attr_name = f"{device} {index} Device State"
+        self._attr_name = f"{device} {index} state"
         serial = coordinator.storage.serial.lower().replace("-", "_")
         self._attr_unique_id = f"{serial}_{device.lower()}{index}_device_state"
 

@@ -79,7 +79,7 @@
   "entity": {
     "sensor": {
       "wallbox_status": {
-        "name": "Wallbox Status",
+        "name": "Charging state",
         "state": {
           "cable_disconnected": "Cable disconnected",
           "cable_connected": "Cable connected",
@@ -88,7 +88,7 @@
         }
       },
       "sgready_status": {
-        "name": "SG Ready Status",
+        "name": "SG Ready status",
         "state": {
           "block": "Block",
           "normal": "Normal",
@@ -97,7 +97,7 @@
         }
       },
       "ep_status": {
-        "name": "Emergency Power Status",
+        "name": "Emergency power status",
         "state": {
           "not_possible": "Not possible",
           "active": "Active",
