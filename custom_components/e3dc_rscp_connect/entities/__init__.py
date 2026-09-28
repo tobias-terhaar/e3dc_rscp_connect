@@ -14,6 +14,7 @@ from .sun_mode_sensor import SunModeSensor
 from .wallbox_current_number import WallboxMaxCurrentNumber, WallboxMinCurrentNumber
 from .wallbox_daily_energy_sensor import WallboxDailyEnergySensor
 from .wallbox_energy_sensor import WallboxEnergySensor
+from .wallbox_session_energy_sensor import WallboxSessionEnergySensor
 from .wallbox_power_sensor import WallboxPowerSensor
 
 __all__ = [
@@ -34,4 +35,5 @@ __all__ = [
     "WallboxMaxCurrentNumber",
     "WallboxMinCurrentNumber",
     "WallboxPowerSensor",
+    "WallboxSessionEnergySensor",
 ]

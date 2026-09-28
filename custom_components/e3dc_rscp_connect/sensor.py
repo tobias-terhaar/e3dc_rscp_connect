@@ -20,6 +20,7 @@ from .entities import (
     WallboxDailyEnergySensor,
     WallboxEnergySensor,
     WallboxPowerSensor,
+    WallboxSessionEnergySensor,
 )
 from .e3dc_rscp_api import DeviceState
 
@@ -287,6 +288,17 @@ async def async_setup_entry(
                 "Daily charged energy",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.power,
+            )
+            for wallbox in coordinator.wallboxes
+        ],
+        *[
+            WallboxSessionEnergySensor(
+                coordinator,
+                config_entry,
+                "Session charged energy",
+                wallbox.index,
+                lambda wallbox=wallbox: wallbox.power,
+                lambda wallbox=wallbox: wallbox.cp_state,
             )
             for wallbox in coordinator.wallboxes
         ],
