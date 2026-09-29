@@ -16,7 +16,6 @@ class EmergencyPowerSensor(E3dcConnectEntity, SensorEntity):
         super().__init__(coordinator, entry)
         self._entry = entry
         self.coordinator = coordinator
-        self._attr_name = "Emergency power status"
         serial = coordinator.storage.serial.lower().replace("-", "_")
         self._attr_unique_id = f"{serial}_emergency_power_state"
 

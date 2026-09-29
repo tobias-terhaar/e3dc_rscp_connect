@@ -26,7 +26,7 @@ class BatteryRemotePowerNumber(E3dcConnectEntity, NumberEntity):
         super().__init__(coordinator, entry)
         serial = coordinator.storage.serial.lower().replace("-", "_")
         self._attr_unique_id = f"{serial}_battery_remote_power"
-        self._attr_name = "Remote control power"
+        self._attr_translation_key = "battery_remote_power"
 
     @property
     def native_value(self) -> float:
@@ -47,7 +47,7 @@ class BatteryRemoteSwitch(E3dcConnectEntity, SwitchEntity):
         super().__init__(coordinator, entry)
         serial = coordinator.storage.serial.lower().replace("-", "_")
         self._attr_unique_id = f"{serial}_remote_control_active"
-        self._attr_name = "Remote control"
+        self._attr_translation_key = "battery_remote_control"
 
     @property
     def is_on(self) -> bool:

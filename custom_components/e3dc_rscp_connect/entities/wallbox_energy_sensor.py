@@ -18,20 +18,20 @@ class WallboxEnergySensor(EnergySensor):
         self,
         coordinator: E3dcRscpCoordinator,
         entry,
-        name: str,
+        key: str,
         index: int,
         data_getter: Callable[[], int | None],
-        key: str | None = None,
     ) -> None:
         """Inits the sensor for the wallbox on the given index.
 
-        `key` identifies the sensor in its unique id. It defaults to the name,
-        so pass it explicitly to keep the id stable across a rename.
+        `key` identifies the sensor: it is both its translation key and the
+        part of the unique id that names it, so it must not be changed once
+        an entity exists. The displayed name comes from the translations.
         """
         super().__init__(
             coordinator,
             entry,
-            name,
+            key,
             data_getter=data_getter,
             sub_device_type="Wallbox",
             sub_device_index=index,
@@ -43,7 +43,6 @@ class WallboxEnergySensor(EnergySensor):
         wallbox_name = coordinator.get_wallbox(index).device_name.lower().replace(
             " ", "_"
         )
-        sensor_name = key or name.lower().replace(" ", "_")
-        self._attr_unique_id = f"{serial}_{wallbox_name}_{index}_{sensor_name}_energy"
+        self._attr_unique_id = f"{serial}_{wallbox_name}_{index}_{key}_energy"
 
         self._index = index

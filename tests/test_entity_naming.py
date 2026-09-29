@@ -42,18 +42,16 @@ def _coordinator():
     return coordinator
 
 
-def _build(cls, mock_entry, name, key=None):
+def _build(cls, mock_entry, key):
     """Builds one entity of every flavour with the same arguments."""
     coordinator = _coordinator()
-    if cls in (WallboxPowerSensor,):
-        return cls(coordinator, mock_entry, name, 0, lambda: 0, key)
-    if cls in (WallboxEnergySensor, WallboxDailyEnergySensor):
-        return cls(coordinator, mock_entry, name, 0, lambda: 0, key)
+    if cls in (WallboxPowerSensor, WallboxEnergySensor, WallboxDailyEnergySensor):
+        return cls(coordinator, mock_entry, key, 0, lambda: 0)
     if cls is WallboxSessionEnergySensor:
-        return cls(coordinator, mock_entry, name, 0, lambda: 0, lambda: "A", key)
+        return cls(coordinator, mock_entry, key, 0, lambda: 0, lambda: "A")
     if cls is PercentageSensor:
-        return cls(coordinator, mock_entry, name, lambda: 0, key=key)
-    return cls(coordinator, mock_entry, name, data_getter=lambda: 0, key=key)
+        return cls(coordinator, mock_entry, key, lambda: 0)
+    return cls(coordinator, mock_entry, key, data_getter=lambda: 0)
 
 
 ALL_SENSORS = [
@@ -69,37 +67,29 @@ ALL_SENSORS = [
 
 @pytest.mark.parametrize("cls", ALL_SENSORS)
 def test_entity_name_is_combined_with_the_device(cls, mock_entry):
-    """Without this two wallboxes would both be named "Current power"."""
-    entity = _build(cls, mock_entry, "Current power", "current_power")
+    """Without this two wallboxes would both carry the same name."""
+    entity = _build(cls, mock_entry, "current_power")
 
     assert entity.has_entity_name is True
-    assert entity.name == "Current power"
 
 
 @pytest.mark.parametrize("cls", ALL_SENSORS)
-def test_unique_id_follows_the_key_not_the_name(cls, mock_entry):
-    """Renaming an entity must not create a new one."""
-    before = _build(cls, mock_entry, "Current power", "current_power").unique_id
-    after = _build(cls, mock_entry, "Charging power", "current_power").unique_id
+def test_name_comes_from_the_translations(cls, mock_entry):
+    """The entity carries the key, Home Assistant looks up the name."""
+    entity = _build(cls, mock_entry, "current_power")
 
-    assert before == after
-
-
-@pytest.mark.parametrize("cls", ALL_SENSORS)
-def test_key_defaults_to_the_name(cls, mock_entry):
-    """The fallback keeps the ids of entities that pass no key."""
-    with_key = _build(cls, mock_entry, "Current power", "current_power").unique_id
-    without_key = _build(cls, mock_entry, "Current power").unique_id
-
-    assert with_key == without_key
+    assert entity.translation_key == "current_power"
+    assert getattr(entity, "_attr_name", None) is None
 
 
 @pytest.mark.parametrize("cls", ALL_SENSORS)
-def test_different_keys_give_different_ids(cls, mock_entry):
-    one = _build(cls, mock_entry, "Same name", "key_one").unique_id
-    two = _build(cls, mock_entry, "Same name", "key_two").unique_id
+def test_unique_id_follows_the_key(cls, mock_entry):
+    """The key is the identity: renaming happens in the translations only."""
+    one = _build(cls, mock_entry, "key_one").unique_id
+    two = _build(cls, mock_entry, "key_two").unique_id
 
     assert one != two
+    assert "key_one" in one
 
 
 # --- Wallbox device name ---------------------------------------------------
@@ -123,7 +113,7 @@ def test_wallbox_device_name(device_name, expected):
 
 def test_wallbox_device_info_is_short_and_linked(mock_entry):
     """The serial is no longer part of the name, via_device carries it."""
-    sensor = _build(WallboxPowerSensor, mock_entry, "Current power", "current_power")
+    sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
 
     info = sensor.device_info
     # "Test Wallbox" already says wallbox, so it is not prefixed again
@@ -133,7 +123,7 @@ def test_wallbox_device_info_is_short_and_linked(mock_entry):
 
 
 def test_storage_device_is_unchanged(mock_entry):
-    sensor = _build(PowerSensor, mock_entry, "Home Power", "home_power")
+    sensor = _build(PowerSensor, mock_entry, "home_power")
 
     info = sensor.device_info
     assert info["name"] == "S10-2023-001"

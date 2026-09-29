@@ -47,7 +47,7 @@ def sensor(mock_entry, wallbox_power):
     return WallboxEnergySensor(
         _coordinator(),
         mock_entry,
-        "Charged energy",
+        "total_charged_energy",
         0,
         lambda: wallbox_power["value"],
     )
@@ -61,8 +61,8 @@ def test_is_accepted_by_the_energy_dashboard(sensor):
 
 
 def test_name_and_unique_id(sensor):
-    assert sensor.name == "Charged energy"
-    assert sensor.unique_id == "s10_2023_001_test_wallbox_0_charged_energy_energy"
+    assert sensor.translation_key == "total_charged_energy"
+    assert sensor.unique_id == "s10_2023_001_test_wallbox_0_total_charged_energy_energy"
 
 
 def test_belongs_to_the_wallbox_device(sensor):
@@ -74,7 +74,7 @@ def test_unique_id_differs_per_wallbox(mock_entry):
         WallboxEnergySensor(
             _coordinator(f"Wallbox {index}", index),
             mock_entry,
-            "Charged energy",
+            "total_charged_energy",
             index,
             lambda: 0,
         ).unique_id
@@ -103,7 +103,7 @@ def test_counts_up_while_charging(sensor, wallbox_power):
 def test_power_sensor_has_a_state_class(mock_entry):
     """Without a state class the power value gets no statistics at all."""
     power_sensor = WallboxPowerSensor(
-        _coordinator(), mock_entry, "Current power", 0, lambda: 0
+        _coordinator(), mock_entry, "current_power", 0, lambda: 0
     )
 
     assert power_sensor.state_class == SensorStateClass.MEASUREMENT

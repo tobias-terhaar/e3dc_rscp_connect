@@ -55,7 +55,7 @@ def test_cp_state_sensor_attributes(mock_entry) -> None:
         wallbox=wallbox_ident,
     )
 
-    assert sensor.name == "Charging state"
+    assert sensor.translation_key == "wallbox_status"
     assert sensor.unique_id == "s10_123456789012_wallbox_1_wallbox_state"
 
 

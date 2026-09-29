@@ -19,18 +19,18 @@ class EnergySensor(E3dcConnectEntity, SensorEntity, RestoreEntity):
         self,
         coordinator: E3dcRscpCoordinator,
         entry,
-        name: str,
+        key: str,
         sensor_value_id: str | None = None,
         data_getter: Callable[[], int | None] | None = None,
         negative_direction: bool = False,
         sub_device_type: str | None = None,
         sub_device_index: str | None = None,
-        key: str | None = None,
     ) -> None:
         """Inits the PowerSensor with a location. The location is used to create the attribute name and the unique id.
 
-        `key` identifies the sensor in its unique id. It defaults to the name,
-        so pass it explicitly to keep the id stable across a rename.
+        `key` identifies the sensor: it is both its translation key and the
+        part of the unique id that names it, so it must not be changed once
+        an entity exists. The displayed name comes from the translations.
         """
         super().__init__(coordinator, entry, sub_device_type, sub_device_index)
 
@@ -41,11 +41,10 @@ class EnergySensor(E3dcConnectEntity, SensorEntity, RestoreEntity):
         self._location = sensor_value_id
         self._data_getter = data_getter
 
-        self._attr_name = name
+        self._attr_translation_key = key
 
         serial = coordinator.storage.serial.lower().replace("-", "_")
-        name = key or name.lower().replace(" ", "_")
-        self._attr_unique_id = f"{serial}_{name}_energy"
+        self._attr_unique_id = f"{serial}_{key}_energy"
 
         self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
         self._attr_device_class = SensorDeviceClass.ENERGY

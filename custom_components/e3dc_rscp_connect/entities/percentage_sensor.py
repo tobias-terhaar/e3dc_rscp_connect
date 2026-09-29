@@ -14,23 +14,22 @@ class PercentageSensor(E3dcConnectEntity, SensorEntity):
         self,
         coordinator: E3dcRscpCoordinator,
         entry,
-        name: str,
+        key: str,
         data_getter,
         sub_device_type: str | None = None,
         sub_device_index: int | None = None,
-        key: str | None = None,
     ) -> None:
         """Init the sensor.
 
-        `key` identifies the sensor in its unique id. It defaults to the name,
-        so pass it explicitly to keep the id stable across a rename.
+        `key` identifies the sensor: it is both its translation key and the
+        part of the unique id that names it, so it must not be changed once
+        an entity exists. The displayed name comes from the translations.
         """
         super().__init__(coordinator, entry, sub_device_type, sub_device_index)
 
-        self._attr_name = name
-        slug = key or name.lower().replace(" ", "_")
+        self._attr_translation_key = key
         serial = coordinator.storage.serial.lower().replace("-", "_")
-        self._attr_unique_id = f"{serial}_{slug}_percentage"
+        self._attr_unique_id = f"{serial}_{key}_percentage"
         self._attr_native_unit_of_measurement = PERCENTAGE
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self.__data_getter = data_getter

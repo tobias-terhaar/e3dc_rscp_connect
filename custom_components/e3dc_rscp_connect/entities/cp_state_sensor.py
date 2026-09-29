@@ -44,7 +44,6 @@ class CpStateSensor(E3dcConnectEntity, SensorEntity):
         # cp states already warned about, see __report_unexpected
         self.__unexpected_states = set()
 
-        self._attr_name = "Charging state"
         serial = coordinator.storage.serial.lower().replace("-", "_")
         wallbox_name = wallbox.device_name.lower().replace(" ", "_")
         self._attr_unique_id = f"{serial}_{wallbox_name}_wallbox_state"

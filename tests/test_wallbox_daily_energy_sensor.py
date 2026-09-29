@@ -60,7 +60,7 @@ def sensor(mock_entry, power):
     sensor = WallboxDailyEnergySensor(
         _coordinator(),
         mock_entry,
-        "Daily charged energy",
+        "daily_charged_energy",
         0,
         lambda: power["value"],
     )
@@ -82,7 +82,7 @@ def test_energy_dashboard_attributes(sensor):
 
 
 def test_name_and_unique_id(sensor):
-    assert sensor.name == "Daily charged energy"
+    assert sensor.translation_key == "daily_charged_energy"
     assert (
         sensor.unique_id == "s10_2023_001_test_wallbox_0_daily_charged_energy_energy"
     )
@@ -153,7 +153,7 @@ def test_timezone_of_the_installation_is_used(mock_entry, power):
     dt_util.set_default_time_zone(ZoneInfo("Pacific/Auckland"))
 
     sensor = WallboxDailyEnergySensor(
-        _coordinator(), mock_entry, "Daily charged energy", 0, lambda: 0
+        _coordinator(), mock_entry, "daily_charged_energy", 0, lambda: 0
     )
 
     local_midnight = sensor.last_reset.astimezone(ZoneInfo("Pacific/Auckland"))

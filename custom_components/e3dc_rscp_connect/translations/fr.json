@@ -1,0 +1,237 @@
+{
+  "config": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "user": {
+        "title": "Configuration E3/DC",
+        "description": "Choisissez la méthode de connexion et saisissez vos identifiants E3/DC. Une connexion locale utilise toujours l'utilisateur fixe local.user, le nom d'utilisateur peut donc rester vide.",
+        "data": {
+          "login_type": "Méthode de connexion",
+          "host": "Adresse IP",
+          "port": "Port",
+          "username": "Nom d'utilisateur (connexion portail uniquement)",
+          "password": "Mot de passe",
+          "key": "Clé de chiffrement RSCP"
+        }
+      },
+      "discovery_confirm": {
+        "title": "Appareil E3/DC détecté",
+        "description": "L'appareil {name} a été détecté sur {host}:{port}. Choisissez la méthode de connexion et saisissez les identifiants pour terminer la configuration. Une connexion locale utilise toujours l'utilisateur fixe local.user, le nom d'utilisateur peut donc rester vide.",
+        "data": {
+          "login_type": "Méthode de connexion",
+          "username": "Nom d'utilisateur (connexion portail uniquement)",
+          "password": "Mot de passe",
+          "key": "Clé de chiffrement RSCP"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Configuration E3/DC",
+        "description": "Les identifiants pour {name} ({host}) ont été refusés. Choisissez la méthode de connexion et saisissez à nouveau les identifiants.",
+        "data": {
+          "login_type": "Méthode de connexion",
+          "username": "Nom d'utilisateur (connexion portail uniquement)",
+          "password": "Mot de passe",
+          "key": "Clé de chiffrement RSCP"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "L'appareil est déjà configuré",
+      "cannot_connect": "Échec de la connexion",
+      "reauth_successful": "La ré-authentification a réussi"
+    },
+    "error": {
+      "cannot_connect": "Échec de la connexion",
+      "invalid_auth": "Authentification invalide",
+      "username_required": "Une connexion portail nécessite un nom d'utilisateur"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configuration E3/DC",
+        "description": "Choisissez la méthode de connexion et saisissez vos identifiants E3/DC. Une connexion locale utilise toujours l'utilisateur fixe local.user, le nom d'utilisateur peut donc rester vide.",
+        "data": {
+          "login_type": "Méthode de connexion",
+          "host": "Adresse IP",
+          "port": "Port",
+          "username": "Nom d'utilisateur (connexion portail uniquement)",
+          "password": "Mot de passe",
+          "key": "Clé de chiffrement RSCP",
+          "update_interval": "Intervalle de mise à jour (secondes)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de la connexion",
+      "invalid_auth": "Authentification invalide",
+      "username_required": "Une connexion portail nécessite un nom d'utilisateur"
+    }
+  },
+  "selector": {
+    "login_type": {
+      "options": {
+        "local": "Utilisateur local",
+        "portal": "Utilisateur portail"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "home_power": {
+        "name": "Puissance consommation maison"
+      },
+      "home_consumption": {
+        "name": "Énergie consommation maison"
+      },
+      "grid_power": {
+        "name": "Puissance réseau"
+      },
+      "grid_consumption_energy": {
+        "name": "Énergie soutirée du réseau"
+      },
+      "grid_production_energy": {
+        "name": "Énergie injectée au réseau"
+      },
+      "battery_power": {
+        "name": "Puissance batterie"
+      },
+      "battery_charge_energy": {
+        "name": "Énergie de charge batterie"
+      },
+      "battery_discharge_energy": {
+        "name": "Énergie de décharge batterie"
+      },
+      "pv_power": {
+        "name": "Puissance PV"
+      },
+      "pv_production_energy": {
+        "name": "Énergie produite PV"
+      },
+      "additional_power": {
+        "name": "Puissance producteurs supplémentaires"
+      },
+      "additional_production_energy": {
+        "name": "Énergie producteurs supplémentaires"
+      },
+      "total_production_power": {
+        "name": "Puissance production totale"
+      },
+      "total_production_energy": {
+        "name": "Énergie production totale"
+      },
+      "wallbox_power": {
+        "name": "Puissance borne de recharge"
+      },
+      "wallbox_charge_energy": {
+        "name": "Énergie de charge borne"
+      },
+      "wallbox_pv_power": {
+        "name": "Puissance PV borne"
+      },
+      "wallbox_sun_charge_energy": {
+        "name": "Énergie de charge PV borne"
+      },
+      "pv_string_1": {
+        "name": "String PV 1"
+      },
+      "pv_string_2": {
+        "name": "String PV 2"
+      },
+      "pv_string_3": {
+        "name": "String PV 3"
+      },
+      "autarky": {
+        "name": "Autarcie"
+      },
+      "self_consumption": {
+        "name": "Autoconsommation"
+      },
+      "state_of_charge": {
+        "name": "État de charge"
+      },
+      "assigned_power": {
+        "name": "Puissance attribuée"
+      },
+      "current_power": {
+        "name": "Puissance de charge"
+      },
+      "total_charged_energy": {
+        "name": "Énergie chargée"
+      },
+      "daily_charged_energy": {
+        "name": "Énergie chargée aujourd'hui"
+      },
+      "session_charged_energy": {
+        "name": "Énergie chargée cette session"
+      },
+      "wallbox_status": {
+        "name": "État de la charge",
+        "state": {
+          "cable_disconnected": "Aucun véhicule connecté",
+          "cable_connected": "Véhicule connecté",
+          "charging": "En charge",
+          "error": "Erreur"
+        }
+      },
+      "sgready_status": {
+        "name": "État SG Ready",
+        "state": {
+          "block": "Blocage",
+          "normal": "Normal",
+          "go": "Chauffage",
+          "force_go": "Chauffage forcé"
+        }
+      },
+      "ep_status": {
+        "name": "État alimentation de secours",
+        "state": {
+          "not_possible": "Impossible",
+          "active": "Actif",
+          "not_active": "Inactif",
+          "not_available": "Non disponible",
+          "island_state": "Commutateur en mode îloté"
+        }
+      },
+      "battery_state": {
+        "name": "État batterie {index}",
+        "state": {
+          "working": "En service",
+          "not_working": "Hors service"
+        }
+      },
+      "battery_update_state": {
+        "name": "État de mise à jour batterie {index}",
+        "state": {
+          "updating": "Mise à jour en cours",
+          "not_updating": "Pas de mise à jour"
+        }
+      }
+    },
+    "select": {
+      "sun_mode": {
+        "name": "Mode de charge",
+        "state": {
+          "sun_mode": "Mode solaire",
+          "mixed_mode": "Mode mixte"
+        }
+      }
+    },
+    "number": {
+      "max_charge_current": {
+        "name": "Courant de charge maximal"
+      },
+      "min_charge_current": {
+        "name": "Courant de charge minimal"
+      },
+      "battery_remote_power": {
+        "name": "Puissance pilotage à distance"
+      }
+    },
+    "switch": {
+      "battery_remote_control": {
+        "name": "Pilotage à distance"
+      }
+    }
+  }
+}

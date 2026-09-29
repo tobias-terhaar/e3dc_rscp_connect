@@ -26,12 +26,12 @@ class DeviceUpdateStateSensor(E3dcConnectEntity, SensorEntity):
 
         self.__data_get_func = data_get_func
 
-        self._attr_name = f"{device} {index} update state"
+        self._attr_translation_key = f"{device.lower()}_update_state"
+        self._attr_translation_placeholders = {"index": str(index)}
         self._attr_unique_id = f"{serial}_{device.lower()}{index}_device_update_state"
 
         self._attr_device_class = SensorDeviceClass.ENUM
-        self._attr_translation_key = "device_update_state"
-        self._attr_options = ["updating", "not updating"]
+        self._attr_options = ["updating", "not_updating"]
 
     @property
     def native_value(self):
@@ -46,4 +46,4 @@ class DeviceUpdateStateSensor(E3dcConnectEntity, SensorEntity):
 
         if states.in_service:
             return "updating"
-        return "not updating"
+        return "not_updating"

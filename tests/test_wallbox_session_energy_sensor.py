@@ -48,7 +48,7 @@ def sensor(mock_entry, wallbox):
     sensor = WallboxSessionEnergySensor(
         _coordinator(),
         mock_entry,
-        "Session charged energy",
+        "session_charged_energy",
         0,
         lambda: wallbox["power"],
         lambda: wallbox["cp_state"],
@@ -98,7 +98,7 @@ def test_energy_attributes(sensor):
 
 
 def test_name_and_unique_id(sensor):
-    assert sensor.name == "Session charged energy"
+    assert sensor.translation_key == "session_charged_energy"
     assert (
         sensor.unique_id
         == "s10_2023_001_test_wallbox_0_session_charged_energy_energy"

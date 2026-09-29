@@ -2,18 +2,41 @@
 
 ## 1.1.2
 
+### Changed
+
+- **Entity names now carry their device.** Home Assistant composes the displayed name as
+  "<device> <entity>", so the sensors of two wallboxes can be told apart instead of both
+  reading `Current power`. Existing entities keep their entity id and their history, only
+  the displayed name gains the device in front of it.
+- **The wallbox device name got shorter.** It was "Wallbox <name> connected to <serial>",
+  which now sits in front of every entity name - it is just the wallbox name. The storage
+  it belongs to is shown by Home Assistant itself, the wallbox appears below it in the
+  device overview.
+- **All entity names are translated now** and follow Home Assistant's naming rules. The
+  names live in the translations instead of the code, and the integration ships English,
+  German, Dutch and French - the config flow, the entity names and the entity states.
+  Six entities used to be named in German regardless of the configured language
+  (`Ladezustand`, `Lademodus`, `Max/Min Ladestrom`, `Fernsteuerung`,
+  `Batterie Fernsteuerung Leistung`), the rest was English only and in mixed title case.
+  Some names were also made clearer: `Additional Power` says
+  `Additional generators power`, `Wallbox Sun Charge Energy` is `Wallbox PV charge energy`
+  (it reports the same value as `Wallbox PV power`), `Home Consumption` gained the missing
+  `energy`, and the wallbox sensors are grouped as `Charged energy`, `Charged energy today`
+  and `Charged energy this session`. Entity ids and history are unaffected, only the
+  displayed names change.
+
 ### Added
 
 - **Each wallbox now has a `Charged energy` sensor.** Home Assistant's energy dashboard
   only accepts energy entities (kWh) as an individual device, so the existing
-  `Current power` in watts was never offered there. The new sensor integrates that power
+  `Charging power` in watts was never offered there. The new sensor integrates that power
   over time and can be added under *Settings → Dashboards → Energy → Individual devices*.
-  The `Current power` sensor also got a state class, so it is recorded in the long term
+  The `Charging power` sensor also got a state class, so it is recorded in the long term
   statistics from now on.
-- **A `Daily charged energy` sensor per wallbox**, counting from 00:00 to 00:00 in the time
+- **A `Charged energy today` sensor per wallbox**, counting from 00:00 to 00:00 in the time
   zone Home Assistant is configured for. It is **disabled by default** - enable it under the
   wallbox device if you want it.
-- **A `Session charged energy` sensor per wallbox.** It starts at zero when a car is plugged
+- **A `Charged energy this session` sensor per wallbox.** It starts at zero when a car is plugged
   in, counts up while it charges and keeps the final value once the car is unplugged, so the
   last session stays readable until the next one begins. Also **disabled by default**.
 - **The EMS system status is now available as seven binary sensors**, among them
@@ -32,6 +55,11 @@
   answer is now recognised as "slot not equipped": it is reported once at info level and
   stays at debug level afterwards. Nothing was broken by this, it was log noise only
   ([#12](https://github.com/tobias-terhaar/e3dc_rscp_connect/issues/12)).
+- **The wallbox state was logged on every poll cycle.** `cp_state_sensor` reported the raw
+  CP state at warning level on every update, around 8.600 lines per day and wallbox at the
+  default interval - it is debug level now. An unknown state is still warned about, but
+  only once per state instead of once per cycle, and a state that has not been read yet is
+  no longer reported as unexpected.
 - **Unhandled RSCP tags no longer repeat in the log.** Whatever tag remains unclaimed is
   warned about once per tag name and logged at debug level from then on, so a single
   unexpected tag can no longer flood the log.

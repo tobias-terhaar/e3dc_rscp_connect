@@ -3,11 +3,11 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "RSCP Konfiguration",
-        "description": "Wähle die Anmeldeart und gib deine Zugangsdaten ein. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
+        "title": "E3/DC Konfiguration",
+        "description": "Wähle die Anmeldeart und gib deine E3/DC Zugangsdaten ein. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
         "data": {
           "login_type": "Anmeldeart",
-          "host": "IP Adresse",
+          "host": "IP-Adresse",
           "port": "Port",
           "username": "Benutzername (nur Portalanmeldung)",
           "password": "Passwort",
@@ -15,7 +15,7 @@
         }
       },
       "discovery_confirm": {
-        "title": "E3DC Hauskraftwerk gefunden",
+        "title": "E3/DC Hauskraftwerk gefunden",
         "description": "Das Hauskraftwerk {name} wurde unter {host}:{port} gefunden. Wähle die Anmeldeart und gib die Zugangsdaten ein, um die Einrichtung abzuschließen. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
         "data": {
           "login_type": "Anmeldeart",
@@ -25,7 +25,7 @@
         }
       },
       "reauth_confirm": {
-        "title": "RSCP Konfiguration",
+        "title": "E3/DC Konfiguration",
         "description": "Die Zugangsdaten für {name} ({host}) wurden abgelehnt. Wähle die Anmeldeart und gib die Zugangsdaten erneut ein.",
         "data": {
           "login_type": "Anmeldeart",
@@ -42,18 +42,18 @@
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",
-      "invalid_auth": "Ungültige Benutzerdaten",
+      "invalid_auth": "Ungültige Zugangsdaten",
       "username_required": "Für die Portalanmeldung wird ein Benutzername benötigt"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "RSCP Konfiguration",
-        "description": "Wähle die Anmeldeart und gib deine Zugangsdaten ein. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
+        "title": "E3/DC Konfiguration",
+        "description": "Wähle die Anmeldeart und gib deine E3/DC Zugangsdaten ein. Die lokale Anmeldung nutzt immer den festen Benutzer local.user, der Benutzername kann dann leer bleiben.",
         "data": {
           "login_type": "Anmeldeart",
-          "host": "IP Adresse",
+          "host": "IP-Adresse",
           "port": "Port",
           "username": "Benutzername (nur Portalanmeldung)",
           "password": "Passwort",
@@ -64,7 +64,7 @@
     },
     "error": {
       "cannot_connect": "Verbindung fehlgeschlagen",
-      "invalid_auth": "Ungültige Benutzerdaten",
+      "invalid_auth": "Ungültige Zugangsdaten",
       "username_required": "Für die Portalanmeldung wird ein Benutzername benötigt"
     }
   },
@@ -78,6 +78,93 @@
   },
   "entity": {
     "sensor": {
+      "home_power": {
+        "name": "Hausverbrauch Leistung"
+      },
+      "home_consumption": {
+        "name": "Hausverbrauch Energie"
+      },
+      "grid_power": {
+        "name": "Netz Leistung"
+      },
+      "grid_consumption_energy": {
+        "name": "Netzbezug Energie"
+      },
+      "grid_production_energy": {
+        "name": "Netzeinspeisung Energie"
+      },
+      "battery_power": {
+        "name": "Batterie Leistung"
+      },
+      "battery_charge_energy": {
+        "name": "Batterie Ladeenergie"
+      },
+      "battery_discharge_energy": {
+        "name": "Batterie Entladeenergie"
+      },
+      "pv_power": {
+        "name": "PV Leistung"
+      },
+      "pv_production_energy": {
+        "name": "PV Erzeugung Energie"
+      },
+      "additional_power": {
+        "name": "Zusätzliche Erzeuger Leistung"
+      },
+      "additional_production_energy": {
+        "name": "Zusätzliche Erzeuger Energie"
+      },
+      "total_production_power": {
+        "name": "Gesamterzeugung Leistung"
+      },
+      "total_production_energy": {
+        "name": "Gesamterzeugung Energie"
+      },
+      "wallbox_power": {
+        "name": "Wallbox Leistung"
+      },
+      "wallbox_charge_energy": {
+        "name": "Wallbox Ladeenergie"
+      },
+      "wallbox_pv_power": {
+        "name": "Wallbox PV Leistung"
+      },
+      "wallbox_sun_charge_energy": {
+        "name": "Wallbox PV Ladeenergie"
+      },
+      "pv_string_1": {
+        "name": "PV String 1"
+      },
+      "pv_string_2": {
+        "name": "PV String 2"
+      },
+      "pv_string_3": {
+        "name": "PV String 3"
+      },
+      "autarky": {
+        "name": "Autarkie"
+      },
+      "self_consumption": {
+        "name": "Eigenverbrauch"
+      },
+      "state_of_charge": {
+        "name": "Ladezustand"
+      },
+      "assigned_power": {
+        "name": "Zugeteilte Leistung"
+      },
+      "current_power": {
+        "name": "Ladeleistung"
+      },
+      "total_charged_energy": {
+        "name": "Geladene Energie"
+      },
+      "daily_charged_energy": {
+        "name": "Geladene Energie heute"
+      },
+      "session_charged_energy": {
+        "name": "Geladene Energie diese Ladung"
+      },
       "wallbox_status": {
         "name": "Wallbox Status",
         "state": {
@@ -97,7 +184,7 @@
         }
       },
       "ep_status": {
-        "name": "Emergency Power Status",
+        "name": "Notstrom Status",
         "state": {
           "not_possible": "Nicht möglich",
           "active": "Aktiv",
@@ -105,6 +192,45 @@
           "not_available": "Nicht verfügbar",
           "island_state": "Schalter in OffGrid Position"
         }
+      },
+      "battery_state": {
+        "name": "Batterie {index} Status",
+        "state": {
+          "working": "In Betrieb",
+          "not_working": "Nicht in Betrieb"
+        }
+      },
+      "battery_update_state": {
+        "name": "Batterie {index} Update Status",
+        "state": {
+          "updating": "Update läuft",
+          "not_updating": "Kein Update"
+        }
+      }
+    },
+    "select": {
+      "sun_mode": {
+        "name": "Lademodus",
+        "state": {
+          "sun_mode": "Sonnenmodus",
+          "mixed_mode": "Mischmodus"
+        }
+      }
+    },
+    "number": {
+      "max_charge_current": {
+        "name": "Maximaler Ladestrom"
+      },
+      "min_charge_current": {
+        "name": "Minimaler Ladestrom"
+      },
+      "battery_remote_power": {
+        "name": "Fernsteuerung Leistung"
+      }
+    },
+    "switch": {
+      "battery_remote_control": {
+        "name": "Fernsteuerung"
       }
     }
   }

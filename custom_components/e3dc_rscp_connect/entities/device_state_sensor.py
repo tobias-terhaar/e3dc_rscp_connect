@@ -25,13 +25,13 @@ class DeviceStateSensor(E3dcConnectEntity, SensorEntity):
 
         self.__data_get_func = data_get_func
 
-        self._attr_name = f"{device} {index} state"
+        self._attr_translation_key = f"{device.lower()}_state"
+        self._attr_translation_placeholders = {"index": str(index)}
         serial = coordinator.storage.serial.lower().replace("-", "_")
         self._attr_unique_id = f"{serial}_{device.lower()}{index}_device_state"
 
         self._attr_device_class = SensorDeviceClass.ENUM
-        self._attr_translation_key = "device_state"
-        self._attr_options = ["working", "not working"]
+        self._attr_options = ["working", "not_working"]
 
     @property
     def native_value(self):
@@ -46,4 +46,4 @@ class DeviceStateSensor(E3dcConnectEntity, SensorEntity):
 
         if states.working:
             return "working"
-        return "not working"
+        return "not_working"

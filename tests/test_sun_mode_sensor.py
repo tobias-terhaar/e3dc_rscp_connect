@@ -63,12 +63,12 @@ class TestSunModeSensor:
         self, sun_mode_sensor, mock_coordinator, mock_entry, mock_wallbox_ident
     ):
         """Test sensor initialization."""
-        assert sun_mode_sensor._attr_name == "Sun mode"
+        assert sun_mode_sensor._attr_translation_key == "sun_mode"
         assert sun_mode_sensor._attr_unique_id == "s10_123456789012_test_wallbox_sun_mode_state"
         assert sun_mode_sensor.coordinator == mock_coordinator
         assert sun_mode_sensor._entry == mock_entry
         assert sun_mode_sensor._sub_device_index == 0
-        assert sun_mode_sensor._attr_options == ["Sonnenmodus", "Mischmodus"]
+        assert sun_mode_sensor._attr_options == ["sun_mode", "mixed_mode"]
 
     def test_initialization_with_different_wallbox_id(
         self, mock_coordinator, mock_entry, mock_wallbox_ident
@@ -87,29 +87,29 @@ class TestSunModeSensor:
     def test_current_option_sun_mode_enabled(
         self, sun_mode_sensor, mock_coordinator, mock_wallbox_data
     ):
-        """Test current_option returns 'Sonnenmodus' when sun_mode is True."""
+        """Test current_option returns 'sun_mode' when sun_mode is True."""
         mock_wallbox_data.sun_mode = True
         mock_coordinator.data = {"wallbox_0": mock_wallbox_data}
 
-        assert sun_mode_sensor.current_option == "Sonnenmodus"
+        assert sun_mode_sensor.current_option == "sun_mode"
 
     def test_current_option_sun_mode_disabled(
         self, sun_mode_sensor, mock_coordinator, mock_wallbox_data
     ):
-        """Test current_option returns 'Mischmodus' when sun_mode is False."""
+        """Test current_option returns 'mixed_mode' when sun_mode is False."""
         mock_wallbox_data.sun_mode = False
         mock_coordinator.get_wallbox.return_value = mock_wallbox_data
 
-        assert sun_mode_sensor.current_option == "Mischmodus"
+        assert sun_mode_sensor.current_option == "mixed_mode"
 
     def test_current_option_sun_mode_none(
         self, sun_mode_sensor, mock_coordinator, mock_wallbox_data
     ):
-        """Test current_option returns 'Unknown' when sun_mode is None."""
+        """Test current_option returns None when sun_mode is None."""
         mock_wallbox_data.sun_mode = None
         mock_coordinator.get_wallbox.return_value = mock_wallbox_data
 
-        assert sun_mode_sensor.current_option == "Unknown"
+        assert sun_mode_sensor.current_option is None
 
     def test_current_option_with_different_wallbox_id(
         self, mock_coordinator, mock_entry, mock_wallbox_ident, mock_wallbox_data
@@ -119,14 +119,14 @@ class TestSunModeSensor:
         mock_wallbox_data.sun_mode = True
         mock_coordinator.data = {"wallbox_2": mock_wallbox_data}
 
-        assert sensor.current_option == "Sonnenmodus"
+        assert sensor.current_option == "sun_mode"
 
     @pytest.mark.asyncio
-    async def test_async_select_option_sonnenmodus(
+    async def test_async_select_option_sun_mode(
         self, sun_mode_sensor, mock_coordinator
     ):
-        """Test selecting 'Sonnenmodus' option."""
-        await sun_mode_sensor.async_select_option("Sonnenmodus")
+        """Test selecting the sun mode option."""
+        await sun_mode_sensor.async_select_option("sun_mode")
 
         mock_coordinator.set_sun_mode.assert_called_once_with(0, True)
         mock_coordinator.async_request_refresh.assert_called_once()
@@ -135,8 +135,8 @@ class TestSunModeSensor:
     async def test_async_select_option_mischmodus(
         self, sun_mode_sensor, mock_coordinator
     ):
-        """Test selecting 'Mischmodus' option."""
-        await sun_mode_sensor.async_select_option("Mischmodus")
+        """Test selecting the mixed mode option."""
+        await sun_mode_sensor.async_select_option("mixed_mode")
 
         mock_coordinator.set_sun_mode.assert_called_once_with(0, False)
         mock_coordinator.async_request_refresh.assert_called_once()
@@ -147,7 +147,7 @@ class TestSunModeSensor:
     ):
         """Test that correct wallbox ID is used when setting sun mode."""
         sensor = SunModeSensor(mock_coordinator, mock_entry, 5, mock_wallbox_ident)
-        await sensor.async_select_option("Sonnenmodus")
+        await sensor.async_select_option("sun_mode")
 
         mock_coordinator.set_sun_mode.assert_called_once_with(5, True)
 
@@ -176,5 +176,5 @@ class TestSunModeSensor:
 
     def test_options_are_immutable(self, sun_mode_sensor):
         """Test that available options are correctly set."""
-        assert sun_mode_sensor._options == ["Sonnenmodus", "Mischmodus"]
-        assert sun_mode_sensor._attr_options == ["Sonnenmodus", "Mischmodus"]
+        assert sun_mode_sensor._options == ["sun_mode", "mixed_mode"]
+        assert sun_mode_sensor._attr_options == ["sun_mode", "mixed_mode"]

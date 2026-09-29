@@ -59,7 +59,7 @@ class WallboxMaxCurrentNumber(_WallboxCurrentNumber):
         serial = coordinator.storage.serial.lower().replace("-", "_")
         device_name = (wallbox.device_name or "wallbox").lower().replace(" ", "_")
         self._attr_unique_id = f"{serial}_{device_name}_max_charge_current"
-        self._attr_name = "Maximum charging current"
+        self._attr_translation_key = "max_charge_current"
 
     @property
     def native_min_value(self) -> float:
@@ -104,7 +104,7 @@ class WallboxMinCurrentNumber(_WallboxCurrentNumber):
         serial = coordinator.storage.serial.lower().replace("-", "_")
         device_name = (wallbox.device_name or "wallbox").lower().replace(" ", "_")
         self._attr_unique_id = f"{serial}_{device_name}_min_charge_current"
-        self._attr_name = "Minimum charging current"
+        self._attr_translation_key = "min_charge_current"
 
     @property
     def native_min_value(self) -> float:

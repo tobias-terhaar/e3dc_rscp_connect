@@ -1,0 +1,237 @@
+{
+  "config": {
+    "flow_title": "{name} ({host})",
+    "step": {
+      "user": {
+        "title": "E3/DC-configuratie",
+        "description": "Kies de aanmeldmethode en voer je E3/DC-gegevens in. Een lokale aanmelding gebruikt altijd de vaste gebruiker local.user, de gebruikersnaam mag dan leeg blijven.",
+        "data": {
+          "login_type": "Aanmeldmethode",
+          "host": "IP-adres",
+          "port": "Poort",
+          "username": "Gebruikersnaam (alleen portaalaanmelding)",
+          "password": "Wachtwoord",
+          "key": "RSCP-versleutelingssleutel"
+        }
+      },
+      "discovery_confirm": {
+        "title": "E3/DC-apparaat gevonden",
+        "description": "Apparaat {name} is gevonden op {host}:{port}. Kies de aanmeldmethode en voer de gegevens in om de installatie af te ronden. Een lokale aanmelding gebruikt altijd de vaste gebruiker local.user, de gebruikersnaam mag dan leeg blijven.",
+        "data": {
+          "login_type": "Aanmeldmethode",
+          "username": "Gebruikersnaam (alleen portaalaanmelding)",
+          "password": "Wachtwoord",
+          "key": "RSCP-versleutelingssleutel"
+        }
+      },
+      "reauth_confirm": {
+        "title": "E3/DC-configuratie",
+        "description": "De gegevens voor {name} ({host}) zijn geweigerd. Kies de aanmeldmethode en voer de gegevens opnieuw in.",
+        "data": {
+          "login_type": "Aanmeldmethode",
+          "username": "Gebruikersnaam (alleen portaalaanmelding)",
+          "password": "Wachtwoord",
+          "key": "RSCP-versleutelingssleutel"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Apparaat is al geconfigureerd",
+      "cannot_connect": "Verbinden mislukt",
+      "reauth_successful": "Opnieuw aanmelden is gelukt"
+    },
+    "error": {
+      "cannot_connect": "Verbinden mislukt",
+      "invalid_auth": "Ongeldige aanmeldgegevens",
+      "username_required": "Een portaalaanmelding heeft een gebruikersnaam nodig"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "E3/DC-configuratie",
+        "description": "Kies de aanmeldmethode en voer je E3/DC-gegevens in. Een lokale aanmelding gebruikt altijd de vaste gebruiker local.user, de gebruikersnaam mag dan leeg blijven.",
+        "data": {
+          "login_type": "Aanmeldmethode",
+          "host": "IP-adres",
+          "port": "Poort",
+          "username": "Gebruikersnaam (alleen portaalaanmelding)",
+          "password": "Wachtwoord",
+          "key": "RSCP-versleutelingssleutel",
+          "update_interval": "Vernieuwingsinterval (seconden)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbinden mislukt",
+      "invalid_auth": "Ongeldige aanmeldgegevens",
+      "username_required": "Een portaalaanmelding heeft een gebruikersnaam nodig"
+    }
+  },
+  "selector": {
+    "login_type": {
+      "options": {
+        "local": "Lokale gebruiker",
+        "portal": "Portaalgebruiker"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "home_power": {
+        "name": "Huisverbruik vermogen"
+      },
+      "home_consumption": {
+        "name": "Huisverbruik energie"
+      },
+      "grid_power": {
+        "name": "Netvermogen"
+      },
+      "grid_consumption_energy": {
+        "name": "Netafname energie"
+      },
+      "grid_production_energy": {
+        "name": "Netinvoeding energie"
+      },
+      "battery_power": {
+        "name": "Accuvermogen"
+      },
+      "battery_charge_energy": {
+        "name": "Accu laadenergie"
+      },
+      "battery_discharge_energy": {
+        "name": "Accu ontlaadenergie"
+      },
+      "pv_power": {
+        "name": "PV-vermogen"
+      },
+      "pv_production_energy": {
+        "name": "PV-opbrengst energie"
+      },
+      "additional_power": {
+        "name": "Extra opwekkers vermogen"
+      },
+      "additional_production_energy": {
+        "name": "Extra opwekkers energie"
+      },
+      "total_production_power": {
+        "name": "Totale opwekking vermogen"
+      },
+      "total_production_energy": {
+        "name": "Totale opwekking energie"
+      },
+      "wallbox_power": {
+        "name": "Laadpaal vermogen"
+      },
+      "wallbox_charge_energy": {
+        "name": "Laadpaal laadenergie"
+      },
+      "wallbox_pv_power": {
+        "name": "Laadpaal PV-vermogen"
+      },
+      "wallbox_sun_charge_energy": {
+        "name": "Laadpaal PV-laadenergie"
+      },
+      "pv_string_1": {
+        "name": "PV-string 1"
+      },
+      "pv_string_2": {
+        "name": "PV-string 2"
+      },
+      "pv_string_3": {
+        "name": "PV-string 3"
+      },
+      "autarky": {
+        "name": "Zelfvoorziening"
+      },
+      "self_consumption": {
+        "name": "Eigenverbruik"
+      },
+      "state_of_charge": {
+        "name": "Laadtoestand"
+      },
+      "assigned_power": {
+        "name": "Toegewezen vermogen"
+      },
+      "current_power": {
+        "name": "Laadvermogen"
+      },
+      "total_charged_energy": {
+        "name": "Geladen energie"
+      },
+      "daily_charged_energy": {
+        "name": "Geladen energie vandaag"
+      },
+      "session_charged_energy": {
+        "name": "Geladen energie deze sessie"
+      },
+      "wallbox_status": {
+        "name": "Laadstatus",
+        "state": {
+          "cable_disconnected": "Geen voertuig verbonden",
+          "cable_connected": "Voertuig aangesloten",
+          "charging": "Laadt",
+          "error": "Fout"
+        }
+      },
+      "sgready_status": {
+        "name": "SG Ready-status",
+        "state": {
+          "block": "Blokkeren",
+          "normal": "Normaal",
+          "go": "Verwarmen",
+          "force_go": "Geforceerd verwarmen"
+        }
+      },
+      "ep_status": {
+        "name": "Noodstroomstatus",
+        "state": {
+          "not_possible": "Niet mogelijk",
+          "active": "Actief",
+          "not_active": "Niet actief",
+          "not_available": "Niet beschikbaar",
+          "island_state": "Schakelaar in eilandbedrijf"
+        }
+      },
+      "battery_state": {
+        "name": "Accu {index} status",
+        "state": {
+          "working": "In bedrijf",
+          "not_working": "Niet in bedrijf"
+        }
+      },
+      "battery_update_state": {
+        "name": "Accu {index} updatestatus",
+        "state": {
+          "updating": "Update bezig",
+          "not_updating": "Geen update"
+        }
+      }
+    },
+    "select": {
+      "sun_mode": {
+        "name": "Laadmodus",
+        "state": {
+          "sun_mode": "Zonnemodus",
+          "mixed_mode": "Gemengde modus"
+        }
+      }
+    },
+    "number": {
+      "max_charge_current": {
+        "name": "Maximale laadstroom"
+      },
+      "min_charge_current": {
+        "name": "Minimale laadstroom"
+      },
+      "battery_remote_power": {
+        "name": "Afstandsbediening vermogen"
+      }
+    },
+    "switch": {
+      "battery_remote_control": {
+        "name": "Afstandsbediening"
+      }
+    }
+  }
+}

@@ -68,7 +68,7 @@ class TestWallboxMaxCurrentNumber:
 
     def test_initialization(self, max_entity, mock_coordinator, mock_entry):
         """Test that name, unique_id and wallbox index are set correctly."""
-        assert max_entity._attr_name == "Maximum charging current"
+        assert max_entity._attr_translation_key == "max_charge_current"
         assert max_entity._attr_unique_id == "s10_2023_001_test_wallbox_max_charge_current"
         assert max_entity._sub_device_index == 0
 
@@ -216,7 +216,7 @@ class TestWallboxMinCurrentNumber:
 
     def test_initialization(self, min_entity, mock_coordinator, mock_entry):
         """Test that name, unique_id and wallbox index are set correctly."""
-        assert min_entity._attr_name == "Minimum charging current"
+        assert min_entity._attr_translation_key == "min_charge_current"
         assert min_entity._attr_unique_id == "s10_2023_001_test_wallbox_min_charge_current"
         assert min_entity._sub_device_index == 0
 

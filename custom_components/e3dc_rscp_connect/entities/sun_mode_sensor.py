@@ -22,7 +22,7 @@ class SunModeSensor(SelectEntity, E3dcConnectEntity):
         self._entry = entry
         self.coordinator = coordinator
 
-        self._attr_name = "Sun mode"
+        self._attr_translation_key = "sun_mode"
         if wallbox.device_name is None:
             wallbox.device_name = "Wallbox unnamed!"
 
@@ -30,7 +30,7 @@ class SunModeSensor(SelectEntity, E3dcConnectEntity):
         device_name = wallbox.device_name.lower().replace(" ", "_")
         self._attr_unique_id = f"{serial}_{device_name}_sun_mode_state"
 
-        self._options = ["Sonnenmodus", "Mischmodus"]
+        self._options = ["sun_mode", "mixed_mode"]
         self._attr_options = self._options
 
     @property
@@ -46,19 +46,19 @@ class SunModeSensor(SelectEntity, E3dcConnectEntity):
         sun_mode = wallbox.sun_mode
 
         if sun_mode:
-            return "Sonnenmodus"
+            return "sun_mode"
         if sun_mode is None:
-            return "Unknown"
-        return "Mischmodus"
+            return None
+        return "mixed_mode"
 
     async def async_select_option(self, option: str) -> None:
         """Handle the user selecting an option from the UI."""
         if self._sub_device_index is None:
             return
 
-        if option == "Sonnenmodus":
+        if option == "sun_mode":
             await self.coordinator.set_sun_mode(self._sub_device_index, True)
-        elif option == "Mischmodus":
+        elif option == "mixed_mode":
             await self.coordinator.set_sun_mode(self._sub_device_index, False)
 
         # refresh data after sending

@@ -64,15 +64,13 @@ async def async_setup_entry(
         PowerSensor(
             coordinator,
             config_entry,
-            "Home power",
-            key="home_power",
+            "home_power",
             data_getter=lambda: coordinator.storage.powers.home,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Home consumption energy",
-            key="home_consumption",
+            "home_consumption",
             data_getter=lambda: coordinator.storage.powers.home,
         ),
         #
@@ -80,22 +78,19 @@ async def async_setup_entry(
         PowerSensor(
             coordinator,
             config_entry,
-            "Grid power",
-            key="grid_power",
+            "grid_power",
             data_getter=lambda: coordinator.storage.powers.grid,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Grid consumption energy",
-            key="grid_consumption_energy",
+            "grid_consumption_energy",
             data_getter=lambda: coordinator.storage.powers.grid,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Grid production energy",
-            key="grid_production_energy",
+            "grid_production_energy",
             data_getter=lambda: coordinator.storage.powers.grid,
             negative_direction=True,
         ),
@@ -104,22 +99,19 @@ async def async_setup_entry(
         PowerSensor(
             coordinator,
             config_entry,
-            "Battery power",
-            key="battery_power",
+            "battery_power",
             data_getter=lambda: coordinator.storage.powers.battery,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Battery charge energy",
-            key="battery_charge_energy",
+            "battery_charge_energy",
             data_getter=lambda: coordinator.storage.powers.battery,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Battery discharge energy",
-            key="battery_discharge_energy",
+            "battery_discharge_energy",
             data_getter=lambda: coordinator.storage.powers.battery,
             negative_direction=True,
         ),
@@ -128,15 +120,13 @@ async def async_setup_entry(
         PowerSensor(
             coordinator,
             config_entry,
-            "PV power",
-            key="pv_power",
+            "pv_power",
             data_getter=lambda: coordinator.storage.powers.pv,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "PV production energy",
-            key="pv_production_energy",
+            "pv_production_energy",
             data_getter=lambda: coordinator.storage.powers.pv,
         ),
         #
@@ -144,15 +134,13 @@ async def async_setup_entry(
         PowerSensor(
             coordinator,
             config_entry,
-            "Additional generators power",
-            key="additional_power",
+            "additional_power",
             data_getter=lambda: coordinator.storage.powers.additional,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Additional generators energy",
-            key="additional_production_energy",
+            "additional_production_energy",
             data_getter=lambda: coordinator.storage.powers.additional,
         ),
         #
@@ -160,15 +148,13 @@ async def async_setup_entry(
         PowerSensor(
             coordinator,
             config_entry,
-            "Total production power",
-            key="total_production_power",
+            "total_production_power",
             data_getter=lambda: get_total_production_power(coordinator),
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Total production energy",
-            key="total_production_energy",
+            "total_production_energy",
             data_getter=lambda: get_total_production_power(coordinator),
         ),
         #
@@ -176,52 +162,45 @@ async def async_setup_entry(
         PowerSensor(
             coordinator,
             config_entry,
-            "Wallbox power",
-            key="wallbox_power",
+            "wallbox_power",
             data_getter=lambda: coordinator.storage.powers.wallbox,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Wallbox charge energy",
-            key="wallbox_charge_energy",
+            "wallbox_charge_energy",
             data_getter=lambda: coordinator.storage.powers.wallbox,
         ),
         PowerSensor(
             coordinator,
             config_entry,
-            "Wallbox PV power",
-            key="wallbox_pv_power",
+            "wallbox_pv_power",
             data_getter=lambda: coordinator.storage.powers.wallbox_pv,
         ),
         EnergySensor(
             coordinator,
             config_entry,
-            "Wallbox PV charge energy",
-            key="wallbox_sun_charge_energy",
+            "wallbox_sun_charge_energy",
             data_getter=lambda: coordinator.storage.powers.wallbox_pv,
         ),
         PowerSensor(
             coordinator,
             config_entry,
-            "PV string 1",
-            key="pv_string_1",
+            "pv_string_1",
             data_getter=lambda: get_inverter_mppt_power(coordinator, 0, 0),
             # sensor_value_id="pvi_0_mppt_0_power",
         ),
         PowerSensor(
             coordinator,
             config_entry,
-            "PV string 2",
-            key="pv_string_2",
+            "pv_string_2",
             data_getter=lambda: get_inverter_mppt_power(coordinator, 0, 1),
             # sensor_value_id="pvi_0_mppt_1_power",
         ),
         PowerSensor(
             coordinator,
             config_entry,
-            "PV string 3",
-            key="pv_string_3",
+            "pv_string_3",
             data_getter=lambda: get_inverter_mppt_power(coordinator, 0, 2),
             # sensor_value_id="pvi_0_mppt_2_power",
         ),
@@ -258,15 +237,13 @@ async def async_setup_entry(
         PercentageSensor(
             coordinator,
             config_entry,
-            "Autarky",
-            key="autarky",
+            "autarky",
             data_getter=lambda: coordinator.storage.autarky,
         ),
         PercentageSensor(
             coordinator,
             config_entry,
-            "Self consumption",
-            key="self_consumption",
+            "self_consumption",
             data_getter=lambda: coordinator.storage.self_consumption,
         ),
         SGReadySensor(coordinator, config_entry),
@@ -278,10 +255,9 @@ async def async_setup_entry(
             WallboxPowerSensor(
                 coordinator,
                 config_entry,
-                "Assigned power",
+                "assigned_power",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.assigned_power,
-                key="assigned_power",
             )
             for wallbox in coordinator.wallboxes
         ],
@@ -289,10 +265,9 @@ async def async_setup_entry(
             WallboxPowerSensor(
                 coordinator,
                 config_entry,
-                "Charging power",
+                "current_power",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.power,
-                key="current_power",
             )
             for wallbox in coordinator.wallboxes
         ],
@@ -300,10 +275,9 @@ async def async_setup_entry(
             WallboxEnergySensor(
                 coordinator,
                 config_entry,
-                "Charged energy",
+                "total_charged_energy",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.power,
-                key="total_charged_energy",
             )
             for wallbox in coordinator.wallboxes
         ],
@@ -311,10 +285,9 @@ async def async_setup_entry(
             WallboxDailyEnergySensor(
                 coordinator,
                 config_entry,
-                "Charged energy today",
+                "daily_charged_energy",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.power,
-                key="daily_charged_energy",
             )
             for wallbox in coordinator.wallboxes
         ],
@@ -322,11 +295,10 @@ async def async_setup_entry(
             WallboxSessionEnergySensor(
                 coordinator,
                 config_entry,
-                "Charged energy this session",
+                "session_charged_energy",
                 wallbox.index,
                 lambda wallbox=wallbox: wallbox.power,
                 lambda wallbox=wallbox: wallbox.cp_state,
-                key="session_charged_energy",
             )
             for wallbox in coordinator.wallboxes
         ],
