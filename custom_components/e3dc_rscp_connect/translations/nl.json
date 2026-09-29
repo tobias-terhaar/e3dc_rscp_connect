@@ -133,13 +133,13 @@
         "name": "Laadpaal PV-laadenergie"
       },
       "pv_string_1": {
-        "name": "PV-string 1"
+        "name": "PV-string-vermogen 1"
       },
       "pv_string_2": {
-        "name": "PV-string 2"
+        "name": "PV-string-vermogen 2"
       },
       "pv_string_3": {
-        "name": "PV-string 3"
+        "name": "PV-string-vermogen 3"
       },
       "autarky": {
         "name": "Zelfvoorziening"

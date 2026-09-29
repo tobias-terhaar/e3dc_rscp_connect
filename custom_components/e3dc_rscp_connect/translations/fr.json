@@ -133,13 +133,13 @@
         "name": "Énergie de charge PV borne"
       },
       "pv_string_1": {
-        "name": "String PV 1"
+        "name": "Puissance String PV 1"
       },
       "pv_string_2": {
-        "name": "String PV 2"
+        "name": "Puissance String PV 2"
       },
       "pv_string_3": {
-        "name": "String PV 3"
+        "name": "Puissance String PV 3"
       },
       "autarky": {
         "name": "Autarcie"

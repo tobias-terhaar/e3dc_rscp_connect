@@ -133,13 +133,13 @@
         "name": "Wallbox PV charge energy"
       },
       "pv_string_1": {
-        "name": "PV string 1"
+        "name": "PV power string 1"
       },
       "pv_string_2": {
-        "name": "PV string 2"
+        "name": "PV power string 2"
       },
       "pv_string_3": {
-        "name": "PV string 3"
+        "name": "PV power string 3"
       },
       "autarky": {
         "name": "Autarky"
