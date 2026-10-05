@@ -39,13 +39,6 @@
 - **A `Charged energy this session` sensor per wallbox.** It starts at zero when a car is plugged
   in, counts up while it charges and keeps the final value once the car is unplugged, so the
   last session stays readable until the next one begins. Also **disabled by default**.
-- **The EMS system status is now available as seven binary sensors**, among them
-  **Power Derated** — the bit that tells you the inverter is capping its output, which many
-  PV systems do at 60 % of their peak power. The other six are Battery Charging Locked,
-  Battery Discharging Locked, Emergency Power Possible, Weather Based Charging, Charge Lock
-  Time Active and Discharge Lock Time Active. A storage that does not report the register
-  leaves the sensors unknown instead of showing a wrong state
-  ([#10](https://github.com/tobias-terhaar/e3dc_rscp_connect/issues/10)).
 
 ### Fixed
 
