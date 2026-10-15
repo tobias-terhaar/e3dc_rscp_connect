@@ -4,7 +4,7 @@ import logging
 
 from rscp_lib.RscpValue import RscpValue
 from .RscpModelInterface import RscpModelInterface
-from .WallboxDataModel import WallboxDataModel
+from .WallboxDataModel import WallboxDataModel, WallboxType
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +18,7 @@ class WallboxRscpModel(RscpModelInterface):
         serial: str | None = None,
         device_name: str | None = None,
         firmware_version: str | None = None,
+        wallbox_type: WallboxType | int | None = None,
     ) -> None:
         "Inits the WalboxRscpModel for index wallbox_index."
         self.__index = wallbox_index
@@ -25,6 +26,7 @@ class WallboxRscpModel(RscpModelInterface):
         self.__model.serial = serial
         self.__model.device_name = device_name
         self.__model.firmware_version = firmware_version
+        self.__model.wallbox_type = wallbox_type
 
     def __eq__(self, other):
         "Comparing two WallboxRscpModeöl instances."
@@ -61,10 +63,24 @@ class WallboxRscpModel(RscpModelInterface):
                     ("TAG_WB_REQ_SERIAL", None),
                     ("TAG_WB_REQ_DEVICE_NAME", None),
                     ("TAG_WB_REQ_FIRMWARE_VERSION", None),
+                    ("TAG_WB_REQ_WALLBOX_TYPE", None),
                 ],
             )
             for index in range(7)
         ]
+
+    @staticmethod
+    def __extract_wallbox_type(container: RscpValue) -> WallboxType | int | None:
+        """Reads TAG_WB_WALLBOX_TYPE, None if the storage did not answer it."""
+        value = container.get_child("TAG_WB_WALLBOX_TYPE")
+        if value is None or getattr(value, "isError", False):
+            return None
+        raw = value.getValue()
+        try:
+            return WallboxType(raw)
+        except ValueError:
+            logger.info("Unknown wallbox type: %s", raw)
+            return raw
 
     @staticmethod
     def identify(container: RscpValue) -> RscpModelInterface | None:
@@ -84,6 +100,7 @@ class WallboxRscpModel(RscpModelInterface):
                 serial.getValue(),
                 device_name.getValue(),
                 firmware_version.getValue(),
+                WallboxRscpModel.__extract_wallbox_type(container),
             )
         return None
 

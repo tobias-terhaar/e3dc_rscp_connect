@@ -13,7 +13,7 @@ custom_components_path = (
 sys.path.insert(0, str(custom_components_path))
 
 from e3dc_rscp_connect.const import DOMAIN
-from e3dc_rscp_connect.e3dc_rscp_api import WallboxDataModel
+from e3dc_rscp_connect.e3dc_rscp_api import WallboxDataModel, WallboxType
 from e3dc_rscp_connect.entities.entity import E3dcConnectEntity
 from e3dc_rscp_connect.entities import (
     EnergySensor,
@@ -128,3 +128,26 @@ def test_storage_device_is_unchanged(mock_entry):
     info = sensor.device_info
     assert info["name"] == "S10-2023-001"
     assert "via_device" not in info
+
+
+# --- Wallbox device model --------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "wallbox_type,expected",
+    [
+        (WallboxType.E3DC, "E3/DC"),
+        (WallboxType.MULTI, "Multiconnect"),
+        (42, "(type 42)"),
+        (None, "Wallbox"),
+    ],
+)
+def test_wallbox_model(wallbox_type, expected):
+    assert E3dcConnectEntity.wallbox_model(wallbox_type) == expected
+
+
+def test_wallbox_device_info_carries_the_model(mock_entry):
+    sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
+    sensor.coordinator.get_wallbox.return_value.wallbox_type = WallboxType.EASY
+
+    assert sensor.device_info["model"] == "Wallbox Easyconnect"
