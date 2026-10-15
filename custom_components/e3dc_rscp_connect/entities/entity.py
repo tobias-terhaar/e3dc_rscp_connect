@@ -4,6 +4,17 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from ..const import DOMAIN  # noqa: TID252
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
+from ..e3dc_rscp_api import WallboxType  # noqa: TID252
+
+# Product names, Home Assistant shows them as the device model.
+WALLBOX_MODELS = {
+    WallboxType.E3DC: "E3/DC",
+    WallboxType.EASY: "Easyconnect",
+    WallboxType.EDISON: "Edison",
+    WallboxType.MULTI: "Multiconnect",
+    WallboxType.EFY: "EFY",
+    WallboxType.EDSN: "EDSN",
+}
 
 
 class E3dcConnectEntity(CoordinatorEntity):
@@ -44,6 +55,19 @@ class E3dcConnectEntity(CoordinatorEntity):
             return device_name
         return f"Wallbox {device_name}"
 
+    @staticmethod
+    def wallbox_model(wallbox_type: WallboxType | int | None) -> str:
+        """Builds the device model of a wallbox from its reported type.
+
+        A type the integration does not know yet keeps its number, so it can
+        be reported and added.
+        """
+        if wallbox_type is None:
+            return "Wallbox"
+        if wallbox_type in WALLBOX_MODELS:
+            return WALLBOX_MODELS[wallbox_type]
+        return f"(type {int(wallbox_type)})"
+
     @property
     def device_info(self):
         "Return the device info depending on the subdevice type."
@@ -55,7 +79,7 @@ class E3dcConnectEntity(CoordinatorEntity):
                 },
                 "name": self.wallbox_device_name(wb_info.device_name),
                 "manufacturer": "E3/DC by HagerEnergy",
-                "model": "Wallbox X",
+                "model": f"Wallbox {self.wallbox_model(wb_info.wallbox_type)}",
                 # use sw_version stored in coordinator!
                 "sw_version": wb_info.firmware_version,
                 # Shows the wallbox below its storage in the device overview,

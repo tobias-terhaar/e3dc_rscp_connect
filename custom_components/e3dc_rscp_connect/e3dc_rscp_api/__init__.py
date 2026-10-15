@@ -30,7 +30,11 @@ from .model.StorageDataModel import (
     PvInverterData,
     StorageDataModel,
 )
-from .model.WallboxDataModel import WallboxCurrentModel, WallboxDataModel
+from .model.WallboxDataModel import (
+    WallboxCurrentModel,
+    WallboxDataModel,
+    WallboxType,
+)
 
 __all__ = [
     "DeviceState",
@@ -46,4 +50,5 @@ __all__ = [
     "StorageDataModel",
     "WallboxCurrentModel",
     "WallboxDataModel",
+    "WallboxType",
 ]
