@@ -230,7 +230,7 @@ class RscpClient:
             recvd_frame_length = RscpFrame.getFrameLength(recv_buffer)
 
             frame = RscpFrame()
-            if len(recv_buffer) > recvd_frame_length:
+            if len(recv_buffer) >= recvd_frame_length:
                 frame.unpack(recv_buffer[0:recvd_frame_length])
 
             return frame.getRscpValues()
