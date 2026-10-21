@@ -463,7 +463,7 @@ class TestSendAndReceive:
         assert result == ["val1", "val2"]
 
     @pytest.mark.asyncio
-    async def test_skips_unpack_when_buffer_not_longer_than_frame(self, client, mock_conn):
+    async def test_unpacks_when_buffer_not_longer_than_frame(self, client, mock_conn):
         fake_buffer = bytes(10)
         mock_conn.receive.return_value = fake_buffer
 
@@ -478,7 +478,7 @@ class TestSendAndReceive:
 
             await client.send_and_receive([])
 
-        unpack_frame.unpack.assert_not_called()
+        unpack_frame.unpack.assert_called()
 
     @pytest.mark.asyncio
     async def test_serialized_via_lock(self, client, mock_conn):
