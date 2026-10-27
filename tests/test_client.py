@@ -11,7 +11,7 @@ sys.path.insert(0, str(custom_components_path))
 from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
-from rscp_lib.RscpConnection import RscpConnectionException
+from e3dc_rscp_connect.rscp_lib.RscpConnection import RscpConnectionException
 
 from e3dc_rscp_connect.e3dc_rscp_api import E3dcAuthenticationError, E3dcConnectionError
 from e3dc_rscp_connect.e3dc_rscp_api.client import RscpClient

@@ -1,7 +1,7 @@
 """Tests for WallboxRscpModel — focused on the power-meter data handling."""
 
 import pytest
-from rscp_lib.RscpValue import RscpValue
+from e3dc_rscp_connect.rscp_lib.RscpValue import RscpValue
 
 from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxDataModel import WallboxType
 from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxRscpModel import WallboxRscpModel

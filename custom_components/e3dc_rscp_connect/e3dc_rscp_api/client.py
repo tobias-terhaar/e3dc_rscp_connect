@@ -3,10 +3,10 @@
 import asyncio
 import logging
 
-from rscp_lib.RscpConnection import RscpConnection, RscpConnectionException
-from rscp_lib.RscpEncryption import RscpEncryption
-from rscp_lib.RscpFrame import RscpFrame
-from rscp_lib.RscpValue import RscpValue
+from ..rscp_lib.RscpConnection import RscpConnection, RscpConnectionException
+from ..rscp_lib.RscpEncryption import RscpEncryption
+from ..rscp_lib.RscpFrame import RscpFrame
+from ..rscp_lib.RscpValue import RscpValue
 from .exceptions import (
     E3dcAuthenticationError,
     E3dcConnectionError,

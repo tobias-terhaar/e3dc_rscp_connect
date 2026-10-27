@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from rscp_lib.RscpValue import RscpValue
+from ...rscp_lib.RscpValue import RscpValue
 
 
 class RscpModelInterface(ABC):
