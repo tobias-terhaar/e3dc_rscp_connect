@@ -2,7 +2,7 @@
 
 import logging
 
-from rscp_lib.RscpValue import RscpValue
+from ...rscp_lib.RscpValue import RscpValue
 from .RscpModelInterface import RscpModelInterface
 from .WallboxDataModel import WallboxDataModel, WallboxType
 

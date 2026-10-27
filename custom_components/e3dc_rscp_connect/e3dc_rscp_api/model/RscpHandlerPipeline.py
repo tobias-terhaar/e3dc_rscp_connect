@@ -2,7 +2,7 @@
 
 import logging  # noqa: I001
 from .RscpModelInterface import RscpModelInterface
-from rscp_lib.RscpValue import RscpValue
+from ...rscp_lib.RscpValue import RscpValue
 
 _LOGGER = logging.getLogger(__name__)
 
