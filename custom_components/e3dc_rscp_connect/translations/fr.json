@@ -253,6 +253,29 @@
       "battery_remote_control": {
         "name": "Pilotage à distance"
       }
+    },
+    "binary_sensor": {
+      "pv_derated": {
+        "name": "Puissance PV bridée"
+      },
+      "power_save_enabled": {
+        "name": "Mode économie d'énergie"
+      },
+      "charge_idle_period_active": {
+        "name": "Période de blocage de charge active"
+      },
+      "discharge_idle_period_active": {
+        "name": "Période de blocage de décharge active"
+      },
+      "wait_for_weather_breakthrough": {
+        "name": "Charge météo en attente du PV"
+      },
+      "emergency_reserve_reached": {
+        "name": "Réserve de secours atteinte"
+      },
+      "idle_periods_enabled": {
+        "name": "Périodes de blocage activées"
+      }
     }
   }
 }

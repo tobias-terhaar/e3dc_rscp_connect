@@ -30,6 +30,7 @@ from .model.StorageDataModel import (
     EmsPowerModel,
     PvInverterData,
     StorageDataModel,
+    SystemStatusModel,
 )
 from .model.WallboxDataModel import (
     WallboxCurrentModel,
@@ -51,6 +52,7 @@ __all__ = [
     "RscpClient",
     "SgReadyDataModel",
     "StorageDataModel",
+    "SystemStatusModel",
     "WallboxCurrentModel",
     "WallboxDataModel",
     "WallboxType",

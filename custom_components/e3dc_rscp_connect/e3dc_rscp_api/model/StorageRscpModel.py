@@ -27,6 +27,8 @@ class StorageRscpModel(RscpModelInterface):
             sw_version=sw_version,
         )
         self.__pvi_identified = False
+        # the system status register is reported as unavailable only once
+        self.__sys_status_unavailable_reported = False
         # battery slots that answered without usable data, reported only once
         self.__incomplete_batteries: set[tuple[int | None, str]] = set()
 
@@ -171,7 +173,57 @@ class StorageRscpModel(RscpModelInterface):
         requests.append(
             RscpValue().withTagName("TAG_EMS_REQ_EMERGENCY_POWER_STATUS", None)
         )
+        requests.append(RscpValue().withTagName("TAG_EMS_REQ_SYS_STATUS", None))
         return requests
+
+    # The flags of the EMS system status register (TAG_EMS_SYS_STATUS) that are
+    # of use in Home Assistant. The other bits are left undecoded.
+    __SYS_STATUS_BITS = (
+        (6, "pv_derated"),
+        (15, "power_save_enabled"),
+        (16, "charge_idle_period_active"),
+        (17, "discharge_idle_period_active"),
+        (18, "wait_for_weather_breakthrough"),
+        (20, "emergency_reserve_reached"),
+        (22, "idle_periods_enabled"),
+    )
+
+    def __report_sys_status_unavailable(self, reason: str):
+        """Reports an unusable system status once, then keeps quiet.
+
+        A storage that does not know the tag answers on every poll cycle, so
+        this must not log repeatedly.
+        """
+        if self.__sys_status_unavailable_reported:
+            logger.debug("No usable TAG_EMS_SYS_STATUS: %s", reason)
+            return
+
+        self.__sys_status_unavailable_reported = True
+        logger.info(
+            "No usable TAG_EMS_SYS_STATUS: %s. The system status sensors stay "
+            "unknown; further occurrences are logged at debug level.",
+            reason,
+        )
+
+    def __set_system_status(self, value: RscpValue):
+        """Decodes the EMS system status register into the data model."""
+
+        if getattr(value, "isError", False):
+            self.__report_sys_status_unavailable("the device answered with an error")
+            return
+
+
+
+        status = value.getValue()
+        if not isinstance(status, int) or isinstance(status, bool):
+            self.__report_sys_status_unavailable(f"unusable value {status!r}")
+            return
+
+        system_status = self.__model.system_status
+        system_status.raw = status
+        logger.debug("TAG_EMS_SYS_STATUS: 0x%08x", status)
+        for bit, name in self.__SYS_STATUS_BITS:
+            setattr(system_status, name, bool(status & (1 << bit)))
 
     def __handle_rcsp_tags_for_ems(self, value: RscpValue):
         if value.getTagName() == "TAG_EMS_BAT_SOC":
@@ -203,6 +255,9 @@ class StorageRscpModel(RscpModelInterface):
             return True
         if value.getTagName() == "TAG_EMS_POWER_WB_SOLAR":
             self.__model.powers.wallbox_pv = value.getValue()
+            return True
+        if value.getTagName() == "TAG_EMS_SYS_STATUS":
+            self.__set_system_status(value)
             return True
         if value.getTagName() == "TAG_EMS_EMERGENCY_POWER_STATUS":
             self.__model.emergency_power_state = value.getValue()

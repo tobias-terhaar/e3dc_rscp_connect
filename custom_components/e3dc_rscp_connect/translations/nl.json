@@ -253,6 +253,29 @@
       "battery_remote_control": {
         "name": "Afstandsbediening"
       }
+    },
+    "binary_sensor": {
+      "pv_derated": {
+        "name": "PV-vermogen begrensd"
+      },
+      "power_save_enabled": {
+        "name": "Energiebesparingsmodus"
+      },
+      "charge_idle_period_active": {
+        "name": "Laadblokkeertijd actief"
+      },
+      "discharge_idle_period_active": {
+        "name": "Ontlaadblokkeertijd actief"
+      },
+      "wait_for_weather_breakthrough": {
+        "name": "Weergestuurd laden wacht op PV"
+      },
+      "emergency_reserve_reached": {
+        "name": "Noodstroomreserve bereikt"
+      },
+      "idle_periods_enabled": {
+        "name": "Blokkeertijden ingeschakeld"
+      }
     }
   }
 }

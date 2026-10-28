@@ -253,6 +253,29 @@
       "battery_remote_control": {
         "name": "Remote control"
       }
+    },
+    "binary_sensor": {
+      "pv_derated": {
+        "name": "PV power derated"
+      },
+      "power_save_enabled": {
+        "name": "Power saving mode"
+      },
+      "charge_idle_period_active": {
+        "name": "Charging lock period active"
+      },
+      "discharge_idle_period_active": {
+        "name": "Discharging lock period active"
+      },
+      "wait_for_weather_breakthrough": {
+        "name": "Weather-based charging waiting for PV"
+      },
+      "emergency_reserve_reached": {
+        "name": "Emergency power reserve reached"
+      },
+      "idle_periods_enabled": {
+        "name": "Lock periods enabled"
+      }
     }
   }
 }
