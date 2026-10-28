@@ -12,15 +12,16 @@ from .entities import SystemStatusBinarySensor
 DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
-# The bits of the EMS system status register and the name they get in HA.
+# The flags of the EMS system status register shown in HA. Each field name is
+# also the translation key of the sensor's name.
 SYSTEM_STATUS_SENSORS = (
-    ("Battery Charging Locked", "battery_charging_locked"),
-    ("Battery Discharging Locked", "battery_discharging_locked"),
-    ("Emergency Power Possible", "emergency_power_possible"),
-    ("Weather Based Charging", "weather_based_charging"),
-    ("Power Derated", "power_derated"),
-    ("Charge Lock Time Active", "charge_lock_time_active"),
-    ("Discharge Lock Time Active", "discharge_lock_time_active"),
+    "pv_derated",
+    "power_save_enabled",
+    "charge_idle_period_active",
+    "discharge_idle_period_active",
+    "wait_for_weather_breakthrough",
+    "emergency_reserve_reached",
+    "idle_periods_enabled",
 )
 
 
@@ -36,6 +37,6 @@ async def async_setup_entry(
     ]
 
     async_add_entities(
-        SystemStatusBinarySensor(coordinator, config_entry, name, status_field)
-        for name, status_field in SYSTEM_STATUS_SENSORS
+        SystemStatusBinarySensor(coordinator, config_entry, status_field)
+        for status_field in SYSTEM_STATUS_SENSORS
     )

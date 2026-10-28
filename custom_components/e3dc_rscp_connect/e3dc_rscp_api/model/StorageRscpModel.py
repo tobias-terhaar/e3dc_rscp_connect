@@ -176,16 +176,21 @@ class StorageRscpModel(RscpModelInterface):
         requests.append(RscpValue().withTagName("TAG_EMS_REQ_SYS_STATUS", None))
         return requests
 
-    # Bits of the EMS system status register, see TAG_EMS_SYS_STATUS.
+    # Single bit flags of the EMS system status register, see TAG_EMS_SYS_STATUS.
+    # Bits 8-9 hold the AC coupling mode and are decoded separately.
     __SYS_STATUS_BITS = (
-        (0, "battery_charging_locked"),
-        (1, "battery_discharging_locked"),
-        (2, "emergency_power_possible"),
-        (3, "weather_based_charging"),
-        (4, "power_derated"),
-        (5, "charge_lock_time_active"),
-        (6, "discharge_lock_time_active"),
+
+        (6, "pv_derated"),
+
+        (15, "power_save_enabled"),
+        (16, "charge_idle_period_active"),
+        (17, "discharge_idle_period_active"),
+        (18, "wait_for_weather_breakthrough"),
+        (20, "emergency_reserve_reached"),
+        (22, "idle_periods_enabled"),
     )
+    __SYS_STATUS_AC_COUPLING_SHIFT = 8
+    __SYS_STATUS_AC_COUPLING_MASK = 0b11
 
     def __report_sys_status_unavailable(self, reason: str):
         """Reports an unusable system status once, then keeps quiet.
@@ -220,7 +225,7 @@ class StorageRscpModel(RscpModelInterface):
 
         system_status = self.__model.system_status
         system_status.raw = status
-        logger.warning(f"raw status: {status}, {value.getType()}")
+        logger.debug("TAG_EMS_SYS_STATUS: 0x%08x", status)
         for bit, name in self.__SYS_STATUS_BITS:
             setattr(system_status, name, bool(status & (1 << bit)))
 

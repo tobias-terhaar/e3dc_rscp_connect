@@ -9,11 +9,13 @@ from .entity import E3dcConnectEntity
 class SystemStatusBinarySensor(E3dcConnectEntity, BinarySensorEntity):
     """Represents a single bit of the EMS system status register."""
 
+    # The name comes from the translations, keyed by the status field.
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: E3dcRscpCoordinator,
         entry,
-        name: str,
         status_field: str,
     ) -> None:
         "Inits the sensor with the name of the field on the system status model."
@@ -21,7 +23,7 @@ class SystemStatusBinarySensor(E3dcConnectEntity, BinarySensorEntity):
 
         self._status_field = status_field
 
-        self._attr_name = name
+        self._attr_translation_key = status_field
         serial = coordinator.storage.serial.lower().replace("-", "_")
         self._attr_unique_id = f"{serial}_{status_field}"
 

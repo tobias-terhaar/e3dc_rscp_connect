@@ -207,78 +207,73 @@ class TestSystemStatus:
     def test_register_is_requested(self, storage_model):
         assert "TAG_EMS_REQ_SYS_STATUS" in _tag_names(storage_model.get_rscp_tags())
 
+    # the single bit flags of the register, bits 8-9 are the AC coupling mode
+    FLAGS = [
+        (6, "pv_derated"),
+        (15, "power_save_enabled"),
+        (16, "charge_idle_period_active"),
+        (17, "discharge_idle_period_active"),
+        (18, "wait_for_weather_breakthrough"),
+        (20, "emergency_reserve_reached"),
+        (22, "idle_periods_enabled"),
+    ]
+
     def test_fields_default_to_none(self, storage_model):
         status = storage_model.get_model().system_status
         assert status.raw is None
-        assert status.power_derated is None
+        assert status.pv_derated is None
 
-    @pytest.mark.parametrize(
-        "bit,field",
-        [
-            (0, "battery_charging_locked"),
-            (1, "battery_discharging_locked"),
-            (2, "emergency_power_possible"),
-            (3, "weather_based_charging"),
-            (4, "power_derated"),
-            (5, "charge_lock_time_active"),
-            (6, "discharge_lock_time_active"),
-        ],
-    )
+    @pytest.mark.parametrize("bit,field", FLAGS)
     def test_single_bit_sets_only_its_own_field(self, storage_model, bit, field):
         result = storage_model.handle_rscp_data(self._make_value(1 << bit))
 
         assert result is True
         status = storage_model.get_model().system_status
         assert getattr(status, field) is True
-        assert sum(
-            1
-            for _, other in TestSystemStatus._fields()
-            if getattr(status, other) is True
-        ) == 1
-
-    @staticmethod
-    def _fields():
-        return [
-            (0, "battery_charging_locked"),
-            (1, "battery_discharging_locked"),
-            (2, "emergency_power_possible"),
-            (3, "weather_based_charging"),
-            (4, "power_derated"),
-            (5, "charge_lock_time_active"),
-            (6, "discharge_lock_time_active"),
-        ]
+        assert sum(1 for _, other in self.FLAGS if getattr(status, other) is True) == 1
+        assert status.ac_coupling_mode == 0
 
     def test_all_bits_cleared(self, storage_model):
         storage_model.handle_rscp_data(self._make_value(0))
 
         status = storage_model.get_model().system_status
         assert status.raw == 0
-        assert all(getattr(status, field) is False for _, field in self._fields())
+        assert all(getattr(status, field) is False for _, field in self.FLAGS)
+        assert status.ac_coupling_mode == 0
+
+    @pytest.mark.parametrize("mode", [0, 1, 2, 3])
+    def test_ac_coupling_mode_is_a_two_bit_number(self, storage_model, mode):
+        storage_model.handle_rscp_data(self._make_value(mode << 8))
+
+        status = storage_model.get_model().system_status
+        assert status.ac_coupling_mode == mode
+        assert all(getattr(status, field) is False for _, field in self.FLAGS)
 
     def test_combined_bits(self, storage_model):
-        # derating plus discharge lock time
-        storage_model.handle_rscp_data(self._make_value(0b1010000))
+        # PV derated and the discharge idle period active
+        storage_model.handle_rscp_data(self._make_value( (1 << 6) | (1 << 17)))
 
         status = storage_model.get_model().system_status
-        assert status.power_derated is True
-        assert status.discharge_lock_time_active is True
-        assert status.battery_charging_locked is False
+        assert status.pv_derated is True
+        assert status.discharge_idle_period_active is True
+        assert status.charge_idle_period_active is False
 
     def test_unknown_higher_bits_are_ignored(self, storage_model):
-        storage_model.handle_rscp_data(self._make_value(0x80000010))
+        storage_model.handle_rscp_data(self._make_value(0x80000040))
 
         status = storage_model.get_model().system_status
-        assert status.raw == 0x80000010
-        assert status.power_derated is True
+        assert status.raw == 0x80000040
+        assert status.pv_derated is True
+        assert sum(1 for _, field in self.FLAGS if getattr(status, field) is True) == 1
 
     def test_unusable_value_keeps_previous_state(self, storage_model, caplog):
-        storage_model.handle_rscp_data(self._make_value(1 << 4))
+        storage_model.handle_rscp_data(self._make_value(1 << 6))
 
         with caplog.at_level(logging.INFO):
             result = storage_model.handle_rscp_data(self._make_value(None))
 
         assert result is True
-        assert storage_model.get_model().system_status.power_derated is True
+        assert storage_model.get_model().system_status.pv_derated is True
         assert "TAG_EMS_SYS_STATUS" in caplog.text
 
     def test_error_answer_leaves_the_status_unknown(self, storage_model, caplog):
@@ -291,7 +286,7 @@ class TestSystemStatus:
         status = storage_model.get_model().system_status
         assert result is True
         assert status.raw is None
-        assert status.power_derated is None
+        assert status.pv_derated is None
         assert "TAG_EMS_SYS_STATUS" in caplog.text
 
     def test_error_answer_is_reported_only_once(self, storage_model, caplog):

@@ -106,6 +106,29 @@
           "island_state": "Schalter in OffGrid Position"
         }
       }
+    },
+    "binary_sensor": {
+      "pv_derated": {
+        "name": "PV-Leistung abgeregelt"
+      },
+      "power_save_enabled": {
+        "name": "Energiesparmodus"
+      },
+      "charge_idle_period_active": {
+        "name": "Ladesperrzeit aktiv"
+      },
+      "discharge_idle_period_active": {
+        "name": "Entladesperrzeit aktiv"
+      },
+      "wait_for_weather_breakthrough": {
+        "name": "Wetterprognose-Laden wartet auf PV"
+      },
+      "emergency_reserve_reached": {
+        "name": "Notstromreserve erreicht"
+      },
+      "idle_periods_enabled": {
+        "name": "Sperrzeiten aktiviert"
+      }
     }
   }
 }

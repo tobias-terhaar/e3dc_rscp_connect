@@ -28,13 +28,16 @@ class SystemStatusModel:
 
     raw: int | None = None
 
-    battery_charging_locked: bool | None = None  # bit 0
-    battery_discharging_locked: bool | None = None  # bit 1
-    emergency_power_possible: bool | None = None  # bit 2
-    weather_based_charging: bool | None = None  # bit 3
-    power_derated: bool | None = None  # bit 4
-    charge_lock_time_active: bool | None = None  # bit 5
-    discharge_lock_time_active: bool | None = None  # bit 6
+
+    pv_derated: bool | None = None  # bit 6
+    power_save_enabled: bool | None = None  # bit 15
+    charge_idle_period_active: bool | None = None  # bit 16
+    discharge_idle_period_active: bool | None = None  # bit 17
+    # weather regulated charging waits for PV power to exceed the derating power
+    wait_for_weather_breakthrough: bool | None = None  # bit 18
+    emergency_reserve_reached: bool | None = None  # bit 20
+    # main switch of the smart charge idle periods
+    idle_periods_enabled: bool | None = None  # bit 22
 
 
 @dataclass
