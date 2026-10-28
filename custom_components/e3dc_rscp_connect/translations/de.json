@@ -165,6 +165,27 @@
       "session_charged_energy": {
         "name": "Geladene Energie diese Ladung"
       },
+      "power_meter_power": {
+        "name": "Leistung"
+      },
+      "power_meter_power_l1": {
+        "name": "Leistung L1"
+      },
+      "power_meter_power_l2": {
+        "name": "Leistung L2"
+      },
+      "power_meter_power_l3": {
+        "name": "Leistung L3"
+      },
+      "power_meter_voltage_l1": {
+        "name": "Spannung L1"
+      },
+      "power_meter_voltage_l2": {
+        "name": "Spannung L2"
+      },
+      "power_meter_voltage_l3": {
+        "name": "Spannung L3"
+      },
       "wallbox_status": {
         "name": "Wallbox Status",
         "state": {

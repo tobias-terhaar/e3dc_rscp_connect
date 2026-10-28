@@ -165,6 +165,27 @@
       "session_charged_energy": {
         "name": "Geladen energie deze sessie"
       },
+      "power_meter_power": {
+        "name": "Vermogen"
+      },
+      "power_meter_power_l1": {
+        "name": "Vermogen L1"
+      },
+      "power_meter_power_l2": {
+        "name": "Vermogen L2"
+      },
+      "power_meter_power_l3": {
+        "name": "Vermogen L3"
+      },
+      "power_meter_voltage_l1": {
+        "name": "Spanning L1"
+      },
+      "power_meter_voltage_l2": {
+        "name": "Spanning L2"
+      },
+      "power_meter_voltage_l3": {
+        "name": "Spanning L3"
+      },
       "wallbox_status": {
         "name": "Laadstatus",
         "state": {

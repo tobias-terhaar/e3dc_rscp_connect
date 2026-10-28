@@ -12,8 +12,13 @@ from unittest.mock import AsyncMock, Mock, call, patch
 import pytest
 
 from rscp_lib.RscpConnection import RscpConnectionException
+from rscp_lib.RscpValue import RscpValue
 
-from e3dc_rscp_connect.e3dc_rscp_api import E3dcAuthenticationError, E3dcConnectionError
+from e3dc_rscp_connect.e3dc_rscp_api import (
+    E3dcAuthenticationError,
+    E3dcConnectionError,
+    PowerMeterType,
+)
 from e3dc_rscp_connect.e3dc_rscp_api.client import RscpClient
 from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxDataModel import WallboxDataModel
 from e3dc_rscp_connect.e3dc_rscp_api.model.WallboxRscpModel import WallboxRscpModel
@@ -697,6 +702,87 @@ class TestIdentifyDevice:
         assert client._RscpClient__storage is None
         assert client._RscpClient__sg_ready is None
         assert client._RscpClient__wallboxes == []
+        assert client.powermeters == []
+
+    @pytest.mark.asyncio
+    async def test_identifies_and_registers_powermeters(self, client, mock_conn):
+        mock_conn.is_connected.return_value = True
+        mock_conn.is_authorized.return_value = True
+
+        answer = [
+            RscpValue.construct_rscp_value(
+                "TAG_PM_DATA", [("TAG_PM_INDEX", 0), ("TAG_PM_TYPE", 1)]
+            ),
+            RscpValue.construct_rscp_value(
+                "TAG_PM_DATA", [("TAG_PM_INDEX", 3), ("TAG_PM_TYPE", 3)]
+            ),
+        ]
+        pipeline = Mock()
+        client._RscpClient__handlerPipeline = pipeline
+
+        # first frame: storage/wallbox/sg ready, second frame: power meters
+        with patch.object(
+            client, "send_and_receive", new=AsyncMock(side_effect=[[], answer])
+        ):
+            await client.identify_device()
+
+        assert [pm.index for pm in client.powermeters] == [0, 3]
+        assert client.get_powermeter(3).pm_type is PowerMeterType.ADDITIONAL_PRODUCTION
+        assert client.get_powermeter(1) is None
+        assert pipeline.add_handler.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_reidentification_does_not_duplicate_powermeters(self, client, mock_conn):
+        mock_conn.is_connected.return_value = True
+        mock_conn.is_authorized.return_value = True
+
+        def answer():
+            return [
+                RscpValue.construct_rscp_value(
+                    "TAG_PM_DATA", [("TAG_PM_INDEX", 0), ("TAG_PM_TYPE", 1)]
+                )
+            ]
+
+        with patch.object(
+            client,
+            "send_and_receive",
+            new=AsyncMock(side_effect=[[], answer(), [], answer()]),
+        ):
+            await client.identify_device()
+            await client.identify_device()
+
+        assert len(client.powermeters) == 1
+
+    @pytest.mark.asyncio
+    async def test_failing_powermeter_identification_keeps_the_rest(
+        self, client, mock_conn
+    ):
+        """An undecodable power meter answer must not fail the identification."""
+        mock_conn.is_connected.return_value = True
+        mock_conn.is_authorized.return_value = True
+
+        mock_value = Mock()
+        mock_value.toString.return_value = "tag"
+        mock_storage = Mock(spec=StorageRscpModel)
+        mock_storage.ident_serial = "S10-001"
+
+        with (
+            patch.object(
+                client,
+                "send_and_receive",
+                new=AsyncMock(
+                    side_effect=[[mock_value], ValueError("Data Type identifier not matching")]
+                ),
+            ),
+            patch(
+                "e3dc_rscp_connect.e3dc_rscp_api.client.StorageRscpModel.identify",
+                return_value=mock_storage,
+            ),
+        ):
+            await client.identify_device()
+
+        assert client._RscpClient__storage is mock_storage
+        assert client.powermeters == []
 
 
 # ─────────────────────────────────────────────────────────────────────────────
