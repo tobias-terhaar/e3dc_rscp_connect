@@ -12,6 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .e3dc_rscp_api import (
     E3dcAuthenticationError,
     E3dcIdentificationError,
+    PowerMeterDataModel,
     RscpClient,
     SgReadyDataModel,
     StorageDataModel,
@@ -100,6 +101,15 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
     def get_wallbox(self, index: int) -> WallboxDataModel:
         "Returns the ident data of a give wallbox."
         return self.client.get_wallbox(index)
+
+    @property
+    def powermeters(self) -> list[PowerMeterDataModel]:
+        "Returns the power meters which have been found."
+        return self.client.powermeters
+
+    def get_powermeter(self, index: int) -> PowerMeterDataModel | None:
+        "Returns the data of a given power meter."
+        return self.client.get_powermeter(index)
 
     async def _async_update_data(self):
         starttime = time.time()

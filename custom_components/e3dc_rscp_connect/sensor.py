@@ -14,6 +14,8 @@ from .entities import (
     EmergencyPowerSensor,
     EnergySensor,
     PercentageSensor,
+    PowerMeterPowerSensor,
+    PowerMeterVoltageSensor,
     PowerSensor,
     SGReadySensor,
     StateOfChargeSensor,
@@ -302,6 +304,77 @@ async def async_setup_entry(
             )
             for wallbox in coordinator.wallboxes
         ],
+        *[
+            sensor
+            for powermeter in coordinator.powermeters
+            for sensor in get_power_meter_sensors(coordinator, config_entry, powermeter)
+        ],
     ]
 
     async_add_entities(sensors)
+
+
+def get_power_meter_sensors(coordinator, config_entry, powermeter) -> list:
+    """The sensors of one power meter.
+
+    Only the total power is enabled by default, the per phase values are
+    there for those who need them.
+    """
+    index = powermeter.index
+    return [
+        PowerMeterPowerSensor(
+            coordinator,
+            config_entry,
+            "power_meter_power",
+            index,
+            lambda: powermeter.power,
+        ),
+        PowerMeterPowerSensor(
+            coordinator,
+            config_entry,
+            "power_meter_power_l1",
+            index,
+            lambda: powermeter.power_l1,
+            enabled_default=False,
+        ),
+        PowerMeterPowerSensor(
+            coordinator,
+            config_entry,
+            "power_meter_power_l2",
+            index,
+            lambda: powermeter.power_l2,
+            enabled_default=False,
+        ),
+        PowerMeterPowerSensor(
+            coordinator,
+            config_entry,
+            "power_meter_power_l3",
+            index,
+            lambda: powermeter.power_l3,
+            enabled_default=False,
+        ),
+        PowerMeterVoltageSensor(
+            coordinator,
+            config_entry,
+            "power_meter_voltage_l1",
+            index,
+            lambda: powermeter.voltage_l1,
+            enabled_default=False,
+        ),
+        PowerMeterVoltageSensor(
+            coordinator,
+            config_entry,
+            "power_meter_voltage_l2",
+            index,
+            lambda: powermeter.voltage_l2,
+            enabled_default=False,
+        ),
+        PowerMeterVoltageSensor(
+            coordinator,
+            config_entry,
+            "power_meter_voltage_l3",
+            index,
+            lambda: powermeter.voltage_l3,
+            enabled_default=False,
+        ),
+    ]

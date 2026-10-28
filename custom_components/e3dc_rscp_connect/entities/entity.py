@@ -5,6 +5,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from ..const import DOMAIN  # noqa: TID252
 from ..coordinator import E3dcRscpCoordinator  # noqa: TID252
 from ..e3dc_rscp_api import WallboxType  # noqa: TID252
+from ..e3dc_rscp_api import PowerMeterType  # noqa: TID252
 
 # Product names, Home Assistant shows them as the device model.
 WALLBOX_MODELS = {
@@ -16,6 +17,22 @@ WALLBOX_MODELS = {
     WallboxType.EDSN: "EDSN",
 }
 
+
+
+# The role of a power meter, Home Assistant shows it as the device model.
+POWER_METER_MODELS = {
+    PowerMeterType.ROOT: "Grid meter",
+    PowerMeterType.ADDITIONAL: "Additional meter",
+    PowerMeterType.ADDITIONAL_PRODUCTION: "Additional production meter",
+    PowerMeterType.ADDITIONAL_CONSUMPTION: "Additional consumption meter",
+    PowerMeterType.FARM: "Farm meter",
+    PowerMeterType.UNUSED: "Not in use",
+    PowerMeterType.WALLBOX: "Wallbox meter",
+    PowerMeterType.FARM_ADDITIONAL: "Farm additional meter",
+    PowerMeterType.ALIEN: "Alien meter",
+    PowerMeterType.REGULATOR_BYPASS: "Regulation bypass meter",
+    PowerMeterType.NO_CHARGE_METER: "Charge bypass meter",
+}
 
 class E3dcConnectEntity(CoordinatorEntity):
     """This entity holds the basic functions of all E3dcConnectEntities."""
@@ -58,9 +75,6 @@ class E3dcConnectEntity(CoordinatorEntity):
     @staticmethod
     def wallbox_model(wallbox_type: WallboxType | int | None) -> str:
         """Builds the device model of a wallbox from its reported type.
-
-        A type the integration does not know yet keeps its number, so it can
-        be reported and added.
         """
         if wallbox_type is None:
             return "Wallbox"
@@ -68,9 +82,41 @@ class E3dcConnectEntity(CoordinatorEntity):
             return WALLBOX_MODELS[wallbox_type]
         return f"(type {int(wallbox_type)})"
 
+    @staticmethod
+    def power_meter_model(pm_type: PowerMeterType | int | None) -> str:
+        """Builds the device model of a power meter from its reported type.
+
+        A type the integration does not know yet keeps its number, so it can
+        be reported and added.
+        """
+        if pm_type is None:
+            return "Power meter"
+        if pm_type in POWER_METER_MODELS:
+            return POWER_METER_MODELS[pm_type]
+        return f"Power meter (type {int(pm_type)})"
+
+
     @property
     def device_info(self):
         "Return the device info depending on the subdevice type."
+        if self._sub_device_type == "PowerMeter":
+            pm_info = self.coordinator.get_powermeter(self._sub_device_index)
+            if pm_info and pm_info.device_name:
+                pm_name = f"Power meter ({pm_info.device_name})"
+            else:
+                pm_name = f"Power meter - Index:{self._sub_device_index}"
+            pm_model = self.power_meter_model(pm_info.pm_type if pm_info else None)
+            if pm_info and pm_info.device_name:
+                pm_model = f"{pm_model}"
+            return {
+                "identifiers": {
+                    (DOMAIN, self._entry.entry_id + f"_pm_{self._sub_device_index}")
+                },
+                "name": pm_name,
+                "manufacturer": "E3/DC by HagerEnergy",
+                "model": pm_model,
+                "via_device": (DOMAIN, self._entry.entry_id),
+            }
         if self._sub_device_type == "Wallbox":
             wb_info = self.coordinator.get_wallbox(self._sub_device_index)
             return {

@@ -165,6 +165,27 @@
       "session_charged_energy": {
         "name": "Charged energy this session"
       },
+      "power_meter_power": {
+        "name": "Power"
+      },
+      "power_meter_power_l1": {
+        "name": "Power L1"
+      },
+      "power_meter_power_l2": {
+        "name": "Power L2"
+      },
+      "power_meter_power_l3": {
+        "name": "Power L3"
+      },
+      "power_meter_voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "power_meter_voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "power_meter_voltage_l3": {
+        "name": "Voltage L3"
+      },
       "wallbox_status": {
         "name": "Charging state",
         "state": {
