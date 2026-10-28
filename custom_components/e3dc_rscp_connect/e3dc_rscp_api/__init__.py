@@ -22,6 +22,7 @@ from .exceptions import (
     E3dcIdentificationError,
     E3dcRscpError,
 )
+from .model.PowerMeterDataModel import PowerMeterDataModel, PowerMeterType
 from .model.SgReadyDataModel import SgReadyDataModel
 from .model.StorageDataModel import (
     DeviceState,
@@ -31,7 +32,11 @@ from .model.StorageDataModel import (
     StorageDataModel,
     SystemStatusModel,
 )
-from .model.WallboxDataModel import WallboxCurrentModel, WallboxDataModel
+from .model.WallboxDataModel import (
+    WallboxCurrentModel,
+    WallboxDataModel,
+    WallboxType,
+)
 
 __all__ = [
     "DeviceState",
@@ -41,6 +46,8 @@ __all__ = [
     "E3dcIdentificationError",
     "E3dcRscpError",
     "EmsPowerModel",
+    "PowerMeterDataModel",
+    "PowerMeterType",
     "PvInverterData",
     "RscpClient",
     "SgReadyDataModel",
@@ -48,4 +55,5 @@ __all__ = [
     "SystemStatusModel",
     "WallboxCurrentModel",
     "WallboxDataModel",
+    "WallboxType",
 ]

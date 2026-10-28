@@ -40,11 +40,11 @@ def test_power_sensor_attributes_sensor_value_id(mock_entry):
     sensor = PowerSensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="AC Power",
+        key="ac_power",
         sensor_value_id="power_ac",
     )
 
-    assert sensor.name == "AC Power"
+    assert sensor.translation_key == "ac_power"
     assert sensor.unique_id == "s10_123456789012_ac_power_power"
     assert sensor.native_unit_of_measurement == UnitOfPower.WATT
     assert sensor.device_class == SensorDeviceClass.POWER
@@ -62,11 +62,11 @@ def test_power_sensor_attributes_data_getter(mock_entry):
     sensor = PowerSensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="Home Power",
+        key="home_power",
         data_getter=lambda: coordinator.storage.powers.home,
     )
 
-    assert sensor.name == "Home Power"
+    assert sensor.translation_key == "home_power"
     assert sensor.unique_id == "s10_123456789012_home_power_power"
     assert sensor.native_unit_of_measurement == UnitOfPower.WATT
     assert sensor.device_class == SensorDeviceClass.POWER
@@ -82,7 +82,7 @@ def test_power_sensor_missing_value(mock_entry):
     sensor = PowerSensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="AC Power",
+        key="ac_power",
         sensor_value_id="power_ac",
     )
 

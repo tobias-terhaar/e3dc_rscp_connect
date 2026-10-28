@@ -1,0 +1,228 @@
+"""Tests for entity naming: the device context and the unique id decoupling."""
+
+import sys
+from pathlib import Path
+from unittest.mock import Mock
+
+import pytest
+
+# Add custom_components to path
+custom_components_path = (
+    Path(__file__).parent.parent.parent.parent / "config" / "custom_components"
+)
+sys.path.insert(0, str(custom_components_path))
+
+from e3dc_rscp_connect.const import DOMAIN
+from e3dc_rscp_connect.e3dc_rscp_api import (
+    PowerMeterDataModel,
+    PowerMeterType,
+    WallboxDataModel,
+    WallboxType
+)
+from e3dc_rscp_connect.entities.entity import E3dcConnectEntity
+from e3dc_rscp_connect.sensor import get_power_meter_sensors
+from e3dc_rscp_connect.entities import (
+    EnergySensor,
+    PercentageSensor,
+    PowerMeterPowerSensor,
+    PowerSensor,
+    WallboxDailyEnergySensor,
+    WallboxEnergySensor,
+    WallboxPowerSensor,
+    WallboxSessionEnergySensor,
+)
+
+
+@pytest.fixture
+def mock_entry():
+    return type("MockEntry", (), {"entry_id": "test_entry_id"})
+
+
+def _coordinator():
+    wallbox = WallboxDataModel(index=0)
+    wallbox.device_name = "Test Wallbox"
+
+    coordinator = Mock()
+    coordinator.data = {}
+    coordinator.storage.serial = "S10-2023-001"
+    coordinator.get_wallbox.return_value = wallbox
+    return coordinator
+
+
+def _build(cls, mock_entry, key):
+    """Builds one entity of every flavour with the same arguments."""
+    coordinator = _coordinator()
+    if cls in (
+        WallboxPowerSensor,
+        WallboxEnergySensor,
+        WallboxDailyEnergySensor,
+        PowerMeterPowerSensor,
+    ):
+        return cls(coordinator, mock_entry, key, 0, lambda: 0)
+    if cls is WallboxSessionEnergySensor:
+        return cls(coordinator, mock_entry, key, 0, lambda: 0, lambda: "A")
+    if cls is PercentageSensor:
+        return cls(coordinator, mock_entry, key, lambda: 0)
+    return cls(coordinator, mock_entry, key, data_getter=lambda: 0)
+
+
+ALL_SENSORS = [
+    PowerMeterPowerSensor,
+    PowerSensor,
+    EnergySensor,
+    PercentageSensor,
+    WallboxPowerSensor,
+    WallboxEnergySensor,
+    WallboxDailyEnergySensor,
+    WallboxSessionEnergySensor,
+]
+
+
+@pytest.mark.parametrize("cls", ALL_SENSORS)
+def test_entity_name_is_combined_with_the_device(cls, mock_entry):
+    """Without this two wallboxes would both carry the same name."""
+    entity = _build(cls, mock_entry, "current_power")
+
+    assert entity.has_entity_name is True
+
+
+@pytest.mark.parametrize("cls", ALL_SENSORS)
+def test_name_comes_from_the_translations(cls, mock_entry):
+    """The entity carries the key, Home Assistant looks up the name."""
+    entity = _build(cls, mock_entry, "current_power")
+
+    assert entity.translation_key == "current_power"
+    assert getattr(entity, "_attr_name", None) is None
+
+
+@pytest.mark.parametrize("cls", ALL_SENSORS)
+def test_unique_id_follows_the_key(cls, mock_entry):
+    """The key is the identity: renaming happens in the translations only."""
+    one = _build(cls, mock_entry, "key_one").unique_id
+    two = _build(cls, mock_entry, "key_two").unique_id
+
+    assert one != two
+    assert "key_one" in one
+
+
+# --- Wallbox device name ---------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "device_name,expected",
+    [
+        ("Garage", "Wallbox Garage"),
+        ("Wallbox 1", "Wallbox 1"),
+        ("wallbox links", "wallbox links"),
+        ("Easy Connect", "Wallbox Easy Connect"),
+        (None, "Wallbox"),
+        ("", "Wallbox"),
+    ],
+)
+def test_wallbox_device_name(device_name, expected):
+    """The device name is prefixed once, never twice."""
+    assert E3dcConnectEntity.wallbox_device_name(device_name) == expected
+
+
+def test_wallbox_device_info_is_short_and_linked(mock_entry):
+    """The serial is no longer part of the name, via_device carries it."""
+    sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
+
+    info = sensor.device_info
+    # "Test Wallbox" already says wallbox, so it is not prefixed again
+    assert info["name"] == "Test Wallbox"
+    assert "S10-2023-001" not in info["name"]
+    assert info["via_device"] == (DOMAIN, "test_entry_id")
+
+
+def test_storage_device_is_unchanged(mock_entry):
+    sensor = _build(PowerSensor, mock_entry, "home_power")
+
+    info = sensor.device_info
+    assert info["name"] == "S10-2023-001"
+    assert "via_device" not in info
+
+
+# --- Wallbox device model --------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "wallbox_type,expected",
+    [
+        (WallboxType.E3DC, "E3/DC"),
+        (WallboxType.MULTI, "Multiconnect"),
+        (42, "(type 42)"),
+        (None, "Wallbox"),
+    ],
+)
+def test_wallbox_model(wallbox_type, expected):
+    assert E3dcConnectEntity.wallbox_model(wallbox_type) == expected
+
+
+def test_wallbox_device_info_carries_the_model(mock_entry):
+    sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
+    sensor.coordinator.get_wallbox.return_value.wallbox_type = WallboxType.EASY
+
+    assert sensor.device_info["model"] == "Wallbox Easyconnect"
+# --- Power meter device ----------------------------------------------------
+
+
+def _power_meter_coordinator(pm_type=PowerMeterType.ROOT, device_name=None):
+    coordinator = _coordinator()
+    coordinator.get_powermeter.return_value = PowerMeterDataModel(
+        index=2, pm_type=pm_type, device_name=device_name
+    )
+    return coordinator
+
+
+@pytest.mark.parametrize(
+    "pm_type,expected",
+    [
+        (PowerMeterType.ROOT, "Grid meter"),
+        (PowerMeterType.ADDITIONAL_PRODUCTION, "Additional production meter"),
+        (42, "Power meter (type 42)"),
+        (None, "Power meter"),
+    ],
+)
+def test_power_meter_model(pm_type, expected):
+    assert E3dcConnectEntity.power_meter_model(pm_type) == expected
+
+
+def test_power_meter_is_a_device_below_the_storage(mock_entry):
+    coordinator = _power_meter_coordinator()
+    sensor = PowerMeterPowerSensor(
+        coordinator, mock_entry, "power_meter_power", 2, lambda: 0
+    )
+
+    info = sensor.device_info
+    assert info["identifiers"] == {(DOMAIN, "test_entry_id_pm_2")}
+    assert info["name"] == "Power meter - Index:2"
+    assert info["model"] == "Grid meter"
+    assert info["via_device"] == (DOMAIN, "test_entry_id")
+
+
+def test_power_meter_model_carries_the_device_name(mock_entry):
+    coordinator = _power_meter_coordinator(device_name="Hausanschluss")
+    sensor = PowerMeterPowerSensor(
+        coordinator, mock_entry, "power_meter_power", 2, lambda: 0
+    )
+
+    assert sensor.device_info["model"] == "Grid meter"
+
+
+def test_power_meter_sensors(mock_entry):
+    coordinator = _power_meter_coordinator()
+    powermeter = PowerMeterDataModel(
+        index=2, power_l1=100.0, power_l2=50.0, voltage_l1=230.0
+    )
+
+    sensors = get_power_meter_sensors(coordinator, mock_entry, powermeter)
+    by_key = {sensor.translation_key: sensor for sensor in sensors}
+
+    assert by_key["power_meter_power"].native_value == 150.0
+    assert by_key["power_meter_voltage_l1"].native_value == 230.0
+    assert by_key["power_meter_power"].unique_id == "s10_2023_001_pm_2_power_meter_power"
+    # only the total is enabled by default
+    enabled = [s.translation_key for s in sensors if s.entity_registry_enabled_default]
+    assert enabled == ["power_meter_power"]
+    assert len({sensor.unique_id for sensor in sensors}) == len(sensors)

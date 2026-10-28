@@ -1,6 +1,18 @@
 "This file contains the WallboxDataModel."
 
 from dataclasses import dataclass, field
+from enum import IntEnum
+
+
+class WallboxType(IntEnum):
+    "The wallbox models as reported by the storage in TAG_WB_WALLBOX_TYPE."
+
+    E3DC = 1
+    EASY = 2
+    EDISON = 5
+    MULTI = 6
+    EFY = 8
+    EDSN = 11
 
 
 @dataclass
@@ -27,6 +39,8 @@ class WallboxDataModel:
     serial: str | None = None
     device_name: str | None = None
     firmware_version: str | None = None
+    # a WallboxType, or the raw number for a type this package does not know yet
+    wallbox_type: WallboxType | int | None = None
 
     def reset_state_data(self):
         "Resets only the state data, the device identification data stays."

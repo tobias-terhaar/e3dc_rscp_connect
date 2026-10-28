@@ -45,11 +45,11 @@ def test_energy_sensor_attributes(coordinator, mock_entry):
     sensor = EnergySensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="Grid Import",
+        key="grid_import",
         sensor_value_id="grid_power",
     )
 
-    assert sensor.name == "Grid Import"
+    assert sensor.translation_key == "grid_import"
     assert sensor.unique_id == "s10_123456789012_grid_import_energy"
     assert sensor.native_unit_of_measurement == "kWh"
     assert sensor.device_class == "energy"
@@ -63,7 +63,7 @@ async def test_restore_last_state(coordinator, mock_entry):
     sensor = EnergySensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="Grid Import",
+        key="grid_import",
         sensor_value_id="grid_power",
     )
 
@@ -82,7 +82,7 @@ async def test_energy_calculation_positive_flow(coordinator, mock_entry):
     sensor = EnergySensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="Grid Import",
+        key="grid_import",
         sensor_value_id="grid_power",
     )
 
@@ -107,7 +107,7 @@ async def test_energy_calculation_positive_flow_data_getter(coordinator, mock_en
     sensor = EnergySensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="Grid Import",
+        key="grid_import",
         data_getter=lambda: coordinator.storage.powers.grid,
     )
 
@@ -133,7 +133,7 @@ async def test_energy_calculation_negative_flow(coordinator, mock_entry):
     sensor = EnergySensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="Grid Export",
+        key="grid_export",
         sensor_value_id="grid_power",
         negative_direction=True,
     )
@@ -159,7 +159,7 @@ def test_missing_power_value_handling(coordinator, mock_entry):
     sensor = EnergySensor(
         coordinator=coordinator,
         entry=mock_entry,
-        name="PV",
+        key="pv",
         sensor_value_id="pv_power",
     )
 

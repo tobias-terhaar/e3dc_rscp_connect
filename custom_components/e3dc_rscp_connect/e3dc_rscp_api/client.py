@@ -13,6 +13,8 @@ from .exceptions import (
     E3dcIdentificationError,
     E3dcRscpError,
 )
+from .model.PowerMeterDataModel import PowerMeterDataModel
+from .model.PowerMeterRscpModel import PowerMeterRscpModel
 from .model.RscpHandlerPipeline import RscpHandlerPipeline
 from .model.SgReadyRscpModel import SgReadyRscpModel
 from .model.StorageRscpModel import StorageRscpModel
@@ -35,6 +37,7 @@ class RscpClient:
         self.__storage: StorageRscpModel | None = None
         self.__sg_ready = None
         self.__wallboxes = []
+        self.__powermeters = []
         self.__handlerPipeline = RscpHandlerPipeline()
         self.__lock = asyncio.Lock()
 
@@ -71,6 +74,18 @@ class RscpClient:
         for wallbox in self.__wallboxes:
             if wallbox.get_model().index == index:
                 return wallbox
+        return None
+
+    @property
+    def powermeters(self) -> list[PowerMeterDataModel]:
+        "Get access to the stored power meter data."
+        return [powermeter.get_model() for powermeter in self.__powermeters]
+
+    def get_powermeter(self, index: int) -> PowerMeterDataModel | None:
+        "Returns the data of a given power meter."
+        for powermeter in self.powermeters:
+            if powermeter.index == index:
+                return powermeter
         return None
 
     @property
@@ -164,6 +179,42 @@ class RscpClient:
         self.__wallboxes.append(wallbox)
         self.__handlerPipeline.add_handler(wallbox)
 
+    def __add_identified_powermeter(self, powermeter: PowerMeterRscpModel):
+        if powermeter in self.__powermeters:
+            _LOGGER.info("Re-Identified power meter: %d", powermeter.index)
+            return
+
+        _LOGGER.info(
+            "Identified power meter %d: %s",
+            powermeter.index,
+            powermeter.get_model().pm_type,
+        )
+        self.__powermeters.append(powermeter)
+        self.__handlerPipeline.add_handler(powermeter)
+
+    async def __identify_powermeters(self):
+        """Identifies the power meters in a frame of their own.
+
+        A power meter answer that can't be decoded must not break the
+        identification of the storage and the wallboxes, so a failure here is
+        logged and the integration carries on without power meters.
+        """
+        try:
+            received_values = await self.send_and_receive(
+                PowerMeterRscpModel.get_identification_tags()
+            )
+        except RscpConnectionException:
+            raise
+        except Exception as err:
+            _LOGGER.warning("Power meter identification failed: %s", err)
+            return
+
+        for value in received_values:
+            _LOGGER.info("Received power meter identification: %s", value.toString())
+            powermeter = PowerMeterRscpModel.identify(value)
+            if powermeter is not None:
+                self.__add_identified_powermeter(powermeter)
+
     async def identify_device(self) -> dict:
         "Reads serial number and firmware version from device."
         try:
@@ -203,6 +254,8 @@ class RscpClient:
                     self.__add_identified_sg_ready(sg_ready)
                     continue
 
+            await self.__identify_powermeters()
+
         except E3dcRscpError:
             raise
         except Exception as err:
@@ -230,7 +283,7 @@ class RscpClient:
             recvd_frame_length = RscpFrame.getFrameLength(recv_buffer)
 
             frame = RscpFrame()
-            if len(recv_buffer) > recvd_frame_length:
+            if len(recv_buffer) >= recvd_frame_length:
                 frame.unpack(recv_buffer[0:recvd_frame_length])
 
             return frame.getRscpValues()

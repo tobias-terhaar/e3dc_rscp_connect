@@ -3,35 +3,35 @@
     "flow_title": "{name} ({host})",
     "step": {
       "user": {
-        "title": "E3DC Configuration",
+        "title": "E3/DC configuration",
         "description": "Choose the login method and enter your E3/DC credentials. A local login always uses the fixed user local.user, so the username can stay empty.",
         "data": {
           "login_type": "Login method",
-          "host": "IP Address",
+          "host": "IP address",
           "port": "Port",
           "username": "Username (portal login only)",
           "password": "Password",
-          "key": "RSCP Encryption key"
+          "key": "RSCP encryption key"
         }
       },
       "discovery_confirm": {
-        "title": "E3DC device discovered",
+        "title": "E3/DC device discovered",
         "description": "Device {name} was discovered at {host}:{port}. Choose the login method and enter the credentials to complete setup. A local login always uses the fixed user local.user, so the username can stay empty.",
         "data": {
           "login_type": "Login method",
           "username": "Username (portal login only)",
           "password": "Password",
-          "key": "RSCP Encryption key"
+          "key": "RSCP encryption key"
         }
       },
       "reauth_confirm": {
-        "title": "E3DC Configuration",
+        "title": "E3/DC configuration",
         "description": "The credentials for {name} ({host}) were rejected. Choose the login method and enter the credentials again.",
         "data": {
           "login_type": "Login method",
           "username": "Username (portal login only)",
           "password": "Password",
-          "key": "RSCP Encryption key"
+          "key": "RSCP encryption key"
         }
       }
     },
@@ -49,15 +49,15 @@
   "options": {
     "step": {
       "init": {
-        "title": "E3DC Configuration",
+        "title": "E3/DC configuration",
         "description": "Choose the login method and enter your E3/DC credentials. A local login always uses the fixed user local.user, so the username can stay empty.",
         "data": {
           "login_type": "Login method",
-          "host": "IP Address",
+          "host": "IP address",
           "port": "Port",
           "username": "Username (portal login only)",
           "password": "Password",
-          "key": "RSCP Encryption key",
+          "key": "RSCP encryption key",
           "update_interval": "Update interval (seconds)"
         }
       }
@@ -78,8 +78,116 @@
   },
   "entity": {
     "sensor": {
+      "home_power": {
+        "name": "Home power"
+      },
+      "home_consumption": {
+        "name": "Home consumption energy"
+      },
+      "grid_power": {
+        "name": "Grid power"
+      },
+      "grid_consumption_energy": {
+        "name": "Grid consumption energy"
+      },
+      "grid_production_energy": {
+        "name": "Grid production energy"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_charge_energy": {
+        "name": "Battery charge energy"
+      },
+      "battery_discharge_energy": {
+        "name": "Battery discharge energy"
+      },
+      "pv_power": {
+        "name": "PV power"
+      },
+      "pv_production_energy": {
+        "name": "PV production energy"
+      },
+      "additional_power": {
+        "name": "Additional generators power"
+      },
+      "additional_production_energy": {
+        "name": "Additional generators energy"
+      },
+      "total_production_power": {
+        "name": "Total production power"
+      },
+      "total_production_energy": {
+        "name": "Total production energy"
+      },
+      "wallbox_power": {
+        "name": "Wallbox power"
+      },
+      "wallbox_charge_energy": {
+        "name": "Wallbox charge energy"
+      },
+      "wallbox_pv_power": {
+        "name": "Wallbox PV power"
+      },
+      "wallbox_sun_charge_energy": {
+        "name": "Wallbox PV charge energy"
+      },
+      "pv_string_1": {
+        "name": "PV power string 1"
+      },
+      "pv_string_2": {
+        "name": "PV power string 2"
+      },
+      "pv_string_3": {
+        "name": "PV power string 3"
+      },
+      "autarky": {
+        "name": "Autarky"
+      },
+      "self_consumption": {
+        "name": "Self consumption"
+      },
+      "state_of_charge": {
+        "name": "State of charge"
+      },
+      "assigned_power": {
+        "name": "Assigned power"
+      },
+      "current_power": {
+        "name": "Charging power"
+      },
+      "total_charged_energy": {
+        "name": "Charged energy"
+      },
+      "daily_charged_energy": {
+        "name": "Charged energy today"
+      },
+      "session_charged_energy": {
+        "name": "Charged energy this session"
+      },
+      "power_meter_power": {
+        "name": "Power"
+      },
+      "power_meter_power_l1": {
+        "name": "Power L1"
+      },
+      "power_meter_power_l2": {
+        "name": "Power L2"
+      },
+      "power_meter_power_l3": {
+        "name": "Power L3"
+      },
+      "power_meter_voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "power_meter_voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "power_meter_voltage_l3": {
+        "name": "Voltage L3"
+      },
       "wallbox_status": {
-        "name": "Wallbox Status",
+        "name": "Charging state",
         "state": {
           "cable_disconnected": "Cable disconnected",
           "cable_connected": "Cable connected",
@@ -88,16 +196,16 @@
         }
       },
       "sgready_status": {
-        "name": "SG Ready Status",
+        "name": "SG Ready status",
         "state": {
           "block": "Block",
           "normal": "Normal",
           "go": "Go",
-          "force_go": "Force Go"
+          "force_go": "Force go"
         }
       },
       "ep_status": {
-        "name": "Emergency Power Status",
+        "name": "Emergency power status",
         "state": {
           "not_possible": "Not possible",
           "active": "Active",
@@ -105,6 +213,45 @@
           "not_available": "Not available",
           "island_state": "Switch in island state"
         }
+      },
+      "battery_state": {
+        "name": "Battery {index} state",
+        "state": {
+          "working": "Working",
+          "not_working": "Not working"
+        }
+      },
+      "battery_update_state": {
+        "name": "Battery {index} update state",
+        "state": {
+          "updating": "Updating",
+          "not_updating": "Not updating"
+        }
+      }
+    },
+    "select": {
+      "sun_mode": {
+        "name": "Charging mode",
+        "state": {
+          "sun_mode": "Sun mode",
+          "mixed_mode": "Mixed mode"
+        }
+      }
+    },
+    "number": {
+      "max_charge_current": {
+        "name": "Maximum charging current"
+      },
+      "min_charge_current": {
+        "name": "Minimum charging current"
+      },
+      "battery_remote_power": {
+        "name": "Remote control power"
+      }
+    },
+    "switch": {
+      "battery_remote_control": {
+        "name": "Remote control"
       }
     },
     "binary_sensor": {
