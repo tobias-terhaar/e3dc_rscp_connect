@@ -207,7 +207,7 @@ class TestSystemStatus:
     def test_register_is_requested(self, storage_model):
         assert "TAG_EMS_REQ_SYS_STATUS" in _tag_names(storage_model.get_rscp_tags())
 
-    # the single bit flags of the register, bits 8-9 are the AC coupling mode
+    # the flags of the register that are decoded
     FLAGS = [
         (6, "pv_derated"),
         (15, "power_save_enabled"),
@@ -231,7 +231,6 @@ class TestSystemStatus:
         status = storage_model.get_model().system_status
         assert getattr(status, field) is True
         assert sum(1 for _, other in self.FLAGS if getattr(status, other) is True) == 1
-        assert status.ac_coupling_mode == 0
 
     def test_all_bits_cleared(self, storage_model):
         storage_model.handle_rscp_data(self._make_value(0))
@@ -239,14 +238,14 @@ class TestSystemStatus:
         status = storage_model.get_model().system_status
         assert status.raw == 0
         assert all(getattr(status, field) is False for _, field in self.FLAGS)
-        assert status.ac_coupling_mode == 0
 
-    @pytest.mark.parametrize("mode", [0, 1, 2, 3])
-    def test_ac_coupling_mode_is_a_two_bit_number(self, storage_model, mode):
-        storage_model.handle_rscp_data(self._make_value(mode << 8))
+    def test_undecoded_bits_set_no_flag(self, storage_model):
+        decoded = sum(1 << bit for bit, _ in self.FLAGS)
+        undecoded = ((1 << 23) - 1) & ~decoded
+        storage_model.handle_rscp_data(self._make_value(undecoded))
 
         status = storage_model.get_model().system_status
-        assert status.ac_coupling_mode == mode
+        assert status.raw == undecoded
         assert all(getattr(status, field) is False for _, field in self.FLAGS)
 
     def test_combined_bits(self, storage_model):

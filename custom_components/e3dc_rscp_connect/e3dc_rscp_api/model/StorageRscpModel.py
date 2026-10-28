@@ -176,12 +176,10 @@ class StorageRscpModel(RscpModelInterface):
         requests.append(RscpValue().withTagName("TAG_EMS_REQ_SYS_STATUS", None))
         return requests
 
-    # Single bit flags of the EMS system status register, see TAG_EMS_SYS_STATUS.
-    # Bits 8-9 hold the AC coupling mode and are decoded separately.
+    # The flags of the EMS system status register (TAG_EMS_SYS_STATUS) that are
+    # of use in Home Assistant. The other bits are left undecoded.
     __SYS_STATUS_BITS = (
-
         (6, "pv_derated"),
-
         (15, "power_save_enabled"),
         (16, "charge_idle_period_active"),
         (17, "discharge_idle_period_active"),
@@ -189,8 +187,6 @@ class StorageRscpModel(RscpModelInterface):
         (20, "emergency_reserve_reached"),
         (22, "idle_periods_enabled"),
     )
-    __SYS_STATUS_AC_COUPLING_SHIFT = 8
-    __SYS_STATUS_AC_COUPLING_MASK = 0b11
 
     def __report_sys_status_unavailable(self, reason: str):
         """Reports an unusable system status once, then keeps quiet.
