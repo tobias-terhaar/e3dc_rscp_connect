@@ -141,6 +141,24 @@
       "pv_string_3": {
         "name": "PV Leistung String 3"
       },
+      "pv_string_1_voltage": {
+        "name": "PV Spannung String 1"
+      },
+      "pv_string_2_voltage": {
+        "name": "PV Spannung String 2"
+      },
+      "pv_string_3_voltage": {
+        "name": "PV Spannung String 3"
+      },
+      "phase_voltage_l1": {
+        "name": "Phasenspannung L1"
+      },
+      "phase_voltage_l2": {
+        "name": "Phasenspannung L2"
+      },
+      "phase_voltage_l3": {
+        "name": "Phasenspannung L3"
+      },
       "autarky": {
         "name": "Autarkie"
       },

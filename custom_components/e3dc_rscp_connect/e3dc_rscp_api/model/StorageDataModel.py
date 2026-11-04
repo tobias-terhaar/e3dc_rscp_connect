@@ -60,9 +60,13 @@ class DeviceStates:
 
 @dataclass
 class PvInverterData:
-    "Class holds the power data of an inverter."
+    "Class holds the power and voltage data of an inverter."
 
+    # DC side, keyed by the MPPT (PV string) index
     power_mppt: dict[int, int | None] = field(default_factory=dict)
+    voltage_mppt: dict[int, float | None] = field(default_factory=dict)
+    # AC side, keyed by the phase index (0 = L1)
+    voltage_ac: dict[int, float | None] = field(default_factory=dict)
 
 
 @dataclass
