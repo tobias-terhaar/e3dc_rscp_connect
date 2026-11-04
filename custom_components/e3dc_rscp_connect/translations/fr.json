@@ -141,6 +141,24 @@
       "pv_string_3": {
         "name": "Puissance String PV 3"
       },
+      "pv_string_1_voltage": {
+        "name": "Tension String PV 1"
+      },
+      "pv_string_2_voltage": {
+        "name": "Tension String PV 2"
+      },
+      "pv_string_3_voltage": {
+        "name": "Tension String PV 3"
+      },
+      "phase_voltage_l1": {
+        "name": "Tension de phase L1"
+      },
+      "phase_voltage_l2": {
+        "name": "Tension de phase L2"
+      },
+      "phase_voltage_l3": {
+        "name": "Tension de phase L3"
+      },
       "autarky": {
         "name": "Autarcie"
       },

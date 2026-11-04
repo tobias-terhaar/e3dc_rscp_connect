@@ -141,6 +141,24 @@
       "pv_string_3": {
         "name": "PV-string-vermogen 3"
       },
+      "pv_string_1_voltage": {
+        "name": "PV-string-spanning 1"
+      },
+      "pv_string_2_voltage": {
+        "name": "PV-string-spanning 2"
+      },
+      "pv_string_3_voltage": {
+        "name": "PV-string-spanning 3"
+      },
+      "phase_voltage_l1": {
+        "name": "Fasespanning L1"
+      },
+      "phase_voltage_l2": {
+        "name": "Fasespanning L2"
+      },
+      "phase_voltage_l3": {
+        "name": "Fasespanning L3"
+      },
       "autarky": {
         "name": "Zelfvoorziening"
       },
