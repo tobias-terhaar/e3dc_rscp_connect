@@ -6,6 +6,7 @@ from .device_state_sensor import DeviceStateSensor
 from .device_update_state_sensor import DeviceUpdateStateSensor
 from .emergency_power_sensor import EmergencyPowerSensor
 from .energy_sensor import EnergySensor
+from .frequency_sensor import FrequencySensor
 from .percentage_sensor import PercentageSensor
 from .power_meter_sensor import PowerMeterPowerSensor, PowerMeterVoltageSensor
 from .power_sensor import PowerSensor
@@ -28,6 +29,7 @@ __all__ = [
     "DeviceUpdateStateSensor",
     "EmergencyPowerSensor",
     "EnergySensor",
+    "FrequencySensor",
     "PercentageSensor",
     "PowerMeterPowerSensor",
     "PowerMeterVoltageSensor",

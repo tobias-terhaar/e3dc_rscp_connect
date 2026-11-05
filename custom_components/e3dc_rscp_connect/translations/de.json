@@ -141,6 +141,9 @@
       "pv_string_3": {
         "name": "PV Leistung String 3"
       },
+      "grid_frequency": {
+        "name": "Netzfrequenz"
+      },
       "pv_string_1_voltage": {
         "name": "PV Spannung String 1"
       },

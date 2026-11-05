@@ -13,6 +13,7 @@ from .entities import (
     DeviceUpdateStateSensor,
     EmergencyPowerSensor,
     EnergySensor,
+    FrequencySensor,
     PercentageSensor,
     PowerMeterPowerSensor,
     PowerMeterVoltageSensor,
@@ -52,6 +53,14 @@ def get_inverter_mppt_power(
     if _inverter is None:
         return None
     return _inverter.power_mppt.get(mppt_index, None)
+
+
+def get_inverter_frequency(coordinator: E3dcRscpCoordinator, inverter: int):
+    """Returns the grid frequency measured by an inverter."""
+    _inverter = coordinator.storage.inverters.get(inverter, None)
+    if _inverter is None:
+        return None
+    return _inverter.ac_frequency
 
 
 def get_inverter_mppt_voltage(
@@ -226,6 +235,12 @@ async def async_setup_entry(
             "pv_string_3",
             data_getter=lambda: get_inverter_mppt_power(coordinator, 0, 2),
             # sensor_value_id="pvi_0_mppt_2_power",
+        ),
+        FrequencySensor(
+            coordinator,
+            config_entry,
+            "grid_frequency",
+            data_getter=lambda: get_inverter_frequency(coordinator, 0),
         ),
         VoltageSensor(
             coordinator,

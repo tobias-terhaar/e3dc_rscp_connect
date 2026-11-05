@@ -141,6 +141,9 @@
       "pv_string_3": {
         "name": "PV-string-vermogen 3"
       },
+      "grid_frequency": {
+        "name": "Netfrequentie"
+      },        
       "pv_string_1_voltage": {
         "name": "PV-string-spanning 1"
       },

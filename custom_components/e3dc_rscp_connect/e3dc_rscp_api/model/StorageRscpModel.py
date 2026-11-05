@@ -288,6 +288,8 @@ class StorageRscpModel(RscpModelInterface):
                     ("TAG_PVI_REQ_DC_POWER", 0),
                     ("TAG_PVI_REQ_DC_POWER", 1),
                     ("TAG_PVI_REQ_DC_POWER", 2),
+                    # the grid frequency is the same on every phase, phase 0 is enough
+                    ("TAG_PVI_REQ_AC_FREQUENCY", 0),
                     ("TAG_PVI_REQ_DC_VOLTAGE", 0),
                     ("TAG_PVI_REQ_DC_VOLTAGE", 1),
                     ("TAG_PVI_REQ_DC_VOLTAGE", 2),
@@ -332,6 +334,11 @@ class StorageRscpModel(RscpModelInterface):
             container, "TAG_PVI_DC_VOLTAGE", inverter.voltage_mppt
         )
         self.__read_indexed_values(container, "TAG_PVI_AC_VOLTAGE", inverter.voltage_ac)
+
+        frequency = container.get_child("TAG_PVI_AC_FREQUENCY")
+        if frequency is not None:
+            value = frequency.get_child("TAG_PVI_VALUE")
+            inverter.ac_frequency = value.getValue() if value is not None else None
 
         return True
 
