@@ -141,6 +141,9 @@
       "pv_string_3": {
         "name": "PV power string 3"
       },
+      "grid_frequency": {
+        "name": "Grid frequency"
+      },
       "autarky": {
         "name": "Autarky"
       },

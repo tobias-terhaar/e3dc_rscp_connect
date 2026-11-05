@@ -63,6 +63,8 @@ class PvInverterData:
     "Class holds the power data of an inverter."
 
     power_mppt: dict[int, int | None] = field(default_factory=dict)
+    # grid frequency in Hz, measured by the inverter on phase L1
+    ac_frequency: float | None = None
 
 
 @dataclass
