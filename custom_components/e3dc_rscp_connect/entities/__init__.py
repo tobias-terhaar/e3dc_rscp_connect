@@ -14,6 +14,7 @@ from .sg_ready_sensor import SGReadySensor
 from .state_of_charge_sensor import StateOfChargeSensor
 from .sun_mode_sensor import SunModeSensor
 from .system_status_binary_sensor import SystemStatusBinarySensor
+from .voltage_sensor import VoltageSensor
 from .wallbox_current_number import WallboxMaxCurrentNumber, WallboxMinCurrentNumber
 from .wallbox_daily_energy_sensor import WallboxDailyEnergySensor
 from .wallbox_energy_sensor import WallboxEnergySensor
@@ -37,6 +38,7 @@ __all__ = [
     "StateOfChargeSensor",
     "SunModeSensor",
     "SystemStatusBinarySensor",
+    "VoltageSensor",
     "WallboxDailyEnergySensor",
     "WallboxEnergySensor",
     "WallboxMaxCurrentNumber",

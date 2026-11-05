@@ -4,6 +4,7 @@ import logging
 from unittest.mock import Mock
 
 import pytest
+from rscp_lib.RscpValue import RscpValue
 
 from e3dc_rscp_connect.e3dc_rscp_api.model.StorageRscpModel import StorageRscpModel
 
@@ -295,3 +296,64 @@ class TestSystemStatus:
 
         above_debug = [r for r in caplog.records if r.levelno > logging.DEBUG]
         assert len(above_debug) == 1
+
+
+class TestInverterData:
+    """Power and voltages of the PV inverter (TAG_PVI_DATA)."""
+
+    @staticmethod
+    def _indexed(tag_name, index, value):
+        return (tag_name, [("TAG_PVI_INDEX", index), ("TAG_PVI_VALUE", value)])
+
+    def _pvi_data(self, index=0, *children):
+        return RscpValue.construct_rscp_value(
+            "TAG_PVI_DATA", [("TAG_PVI_INDEX", index), *children]
+        )
+
+    def _requested(self, storage_model, tag_name):
+        """The indices requested for tag_name in the TAG_PVI_REQ_DATA containers."""
+        indices = set()
+        for tag in storage_model.get_rscp_tags():
+            if tag.getTagName() == "TAG_PVI_REQ_DATA":
+                indices |= {child.getValue() for child in tag.get_childs(tag_name)}
+        return indices
+
+    @pytest.mark.parametrize(
+        "tag_name",
+        ["TAG_PVI_REQ_DC_POWER", "TAG_PVI_REQ_DC_VOLTAGE", "TAG_PVI_REQ_AC_VOLTAGE"],
+    )
+    def test_three_strings_or_phases_are_requested(self, storage_model, tag_name):
+        assert self._requested(storage_model, tag_name) == {0, 1, 2}
+
+    def test_voltages_are_stored(self, storage_model):
+        result = storage_model.handle_rscp_data(
+            self._pvi_data(
+                0,
+                self._indexed("TAG_PVI_DC_POWER", 0, 1200),
+                self._indexed("TAG_PVI_DC_VOLTAGE", 0, 512.5),
+                self._indexed("TAG_PVI_DC_VOLTAGE", 1, 498.0),
+                self._indexed("TAG_PVI_AC_VOLTAGE", 0, 231.2),
+                self._indexed("TAG_PVI_AC_VOLTAGE", 1, 229.8),
+                self._indexed("TAG_PVI_AC_VOLTAGE", 2, 230.4),
+            )
+        )
+
+        assert result is True
+        inverter = storage_model.get_model().inverters[0]
+        assert inverter.power_mppt == {0: 1200}
+        assert inverter.voltage_mppt == {0: 512.5, 1: 498.0}
+        assert inverter.voltage_ac == {0: 231.2, 1: 229.8, 2: 230.4}
+
+    def test_value_without_index_is_skipped(self, storage_model):
+        storage_model.handle_rscp_data(
+            self._pvi_data(0, ("TAG_PVI_DC_VOLTAGE", [("TAG_PVI_VALUE", 500.0)]))
+        )
+
+        assert storage_model.get_model().inverters[0].voltage_mppt == {}
+
+    def test_missing_value_is_none(self, storage_model):
+        storage_model.handle_rscp_data(
+            self._pvi_data(0, ("TAG_PVI_AC_VOLTAGE", [("TAG_PVI_INDEX", 1)]))
+        )
+
+        assert storage_model.get_model().inverters[0].voltage_ac == {1: None}

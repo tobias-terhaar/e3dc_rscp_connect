@@ -282,14 +282,17 @@ class StorageRscpModel(RscpModelInterface):
                     # ("TAG_PVI_REQ_AC_POWER", 0),
                     # ("TAG_PVI_REQ_AC_POWER", 1),
                     # ("TAG_PVI_REQ_AC_POWER", 2),
-                    # ("TAG_PVI_REQ_AC_VOLTAGE", 0),
-                    # ("TAG_PVI_REQ_AC_VOLTAGE", 1),
-                    # ("TAG_PVI_REQ_AC_VOLTAGE", 2),
+                    ("TAG_PVI_REQ_AC_VOLTAGE", 0),
+                    ("TAG_PVI_REQ_AC_VOLTAGE", 1),
+                    ("TAG_PVI_REQ_AC_VOLTAGE", 2),
                     ("TAG_PVI_REQ_DC_POWER", 0),
                     ("TAG_PVI_REQ_DC_POWER", 1),
                     ("TAG_PVI_REQ_DC_POWER", 2),
                     # the grid frequency is the same on every phase, phase 0 is enough
                     ("TAG_PVI_REQ_AC_FREQUENCY", 0),
+                    ("TAG_PVI_REQ_DC_VOLTAGE", 0),
+                    ("TAG_PVI_REQ_DC_VOLTAGE", 1),
+                    ("TAG_PVI_REQ_DC_VOLTAGE", 2),
                 ],
             )
         ]
@@ -326,15 +329,11 @@ class StorageRscpModel(RscpModelInterface):
             self.__model.inverters[pvi_index] = inverter
             logger.warning("Added inverter on index %d to storage", pvi_index)
 
-        dc_power_tags = container.get_childs("TAG_PVI_DC_POWER")
-        for tag in dc_power_tags:
-            mppt_index = tag.get_child("TAG_PVI_INDEX")
-            if mppt_index is not None:
-                mppt_index = mppt_index.getValue()
-                power_value = tag.get_child("TAG_PVI_VALUE")
-                inverter.power_mppt[mppt_index] = (
-                    power_value.getValue() if power_value is not None else None
-                )
+        self.__read_indexed_values(container, "TAG_PVI_DC_POWER", inverter.power_mppt)
+        self.__read_indexed_values(
+            container, "TAG_PVI_DC_VOLTAGE", inverter.voltage_mppt
+        )
+        self.__read_indexed_values(container, "TAG_PVI_AC_VOLTAGE", inverter.voltage_ac)
 
         frequency = container.get_child("TAG_PVI_AC_FREQUENCY")
         if frequency is not None:
@@ -342,6 +341,20 @@ class StorageRscpModel(RscpModelInterface):
             inverter.ac_frequency = value.getValue() if value is not None else None
 
         return True
+
+    @staticmethod
+    def __read_indexed_values(container: RscpValue, tag_name: str, target: dict):
+        """Copies the TAG_PVI_INDEX / TAG_PVI_VALUE pairs of tag_name into target.
+
+        The inverter answers each per string or per phase request with a
+        container of its own, which carries the index it belongs to.
+        """
+        for tag in container.get_childs(tag_name):
+            index = tag.get_child("TAG_PVI_INDEX")
+            if index is None:
+                continue
+            value = tag.get_child("TAG_PVI_VALUE")
+            target[index.getValue()] = value.getValue() if value is not None else None
 
     def __get_rscp_tags_for_battery(self) -> list[RscpValue]:
         value = RscpValue.construct_rscp_value(

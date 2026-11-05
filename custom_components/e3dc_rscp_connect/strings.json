@@ -143,6 +143,23 @@
       },
       "grid_frequency": {
         "name": "Grid frequency"
+      "pv_string_1_voltage": {
+        "name": "PV voltage string 1"
+      },
+      "pv_string_2_voltage": {
+        "name": "PV voltage string 2"
+      },
+      "pv_string_3_voltage": {
+        "name": "PV voltage string 3"
+      },
+      "phase_voltage_l1": {
+        "name": "Phase voltage L1"
+      },
+      "phase_voltage_l2": {
+        "name": "Phase voltage L2"
+      },
+      "phase_voltage_l3": {
+        "name": "Phase voltage L3"
       },
       "autarky": {
         "name": "Autarky"

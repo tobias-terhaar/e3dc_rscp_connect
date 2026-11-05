@@ -20,6 +20,7 @@ from .entities import (
     PowerSensor,
     SGReadySensor,
     StateOfChargeSensor,
+    VoltageSensor,
     WallboxDailyEnergySensor,
     WallboxEnergySensor,
     WallboxPowerSensor,
@@ -60,6 +61,26 @@ def get_inverter_frequency(coordinator: E3dcRscpCoordinator, inverter: int):
     if _inverter is None:
         return None
     return _inverter.ac_frequency
+
+
+def get_inverter_mppt_voltage(
+    coordinator: E3dcRscpCoordinator, inverter: int, mppt_index: int
+):
+    """Returns the DC voltage of a PV string of an inverter."""
+    _inverter = coordinator.storage.inverters.get(inverter, None)
+    if _inverter is None:
+        return None
+    return _inverter.voltage_mppt.get(mppt_index, None)
+
+
+def get_inverter_phase_voltage(
+    coordinator: E3dcRscpCoordinator, inverter: int, phase_index: int
+):
+    """Returns the AC voltage of a phase of an inverter, phase 0 is L1."""
+    _inverter = coordinator.storage.inverters.get(inverter, None)
+    if _inverter is None:
+        return None
+    return _inverter.voltage_ac.get(phase_index, None)
 
 
 async def async_setup_entry(
@@ -220,6 +241,41 @@ async def async_setup_entry(
             config_entry,
             "grid_frequency",
             data_getter=lambda: get_inverter_frequency(coordinator, 0),
+        VoltageSensor(
+            coordinator,
+            config_entry,
+            "pv_string_1_voltage",
+            data_getter=lambda: get_inverter_mppt_voltage(coordinator, 0, 0),
+        ),
+        VoltageSensor(
+            coordinator,
+            config_entry,
+            "pv_string_2_voltage",
+            data_getter=lambda: get_inverter_mppt_voltage(coordinator, 0, 1),
+        ),
+        VoltageSensor(
+            coordinator,
+            config_entry,
+            "pv_string_3_voltage",
+            data_getter=lambda: get_inverter_mppt_voltage(coordinator, 0, 2),
+        ),
+        VoltageSensor(
+            coordinator,
+            config_entry,
+            "phase_voltage_l1",
+            data_getter=lambda: get_inverter_phase_voltage(coordinator, 0, 0),
+        ),
+        VoltageSensor(
+            coordinator,
+            config_entry,
+            "phase_voltage_l2",
+            data_getter=lambda: get_inverter_phase_voltage(coordinator, 0, 1),
+        ),
+        VoltageSensor(
+            coordinator,
+            config_entry,
+            "phase_voltage_l3",
+            data_getter=lambda: get_inverter_phase_voltage(coordinator, 0, 2),
         ),
         EmergencyPowerSensor(coordinator, config_entry),
         DeviceStateSensor(
