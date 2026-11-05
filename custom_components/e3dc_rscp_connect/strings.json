@@ -143,6 +143,7 @@
       },
       "grid_frequency": {
         "name": "Grid frequency"
+      },
       "pv_string_1_voltage": {
         "name": "PV voltage string 1"
       },
