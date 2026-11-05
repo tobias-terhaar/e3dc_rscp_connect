@@ -241,6 +241,7 @@ async def async_setup_entry(
             config_entry,
             "grid_frequency",
             data_getter=lambda: get_inverter_frequency(coordinator, 0),
+        ),
         VoltageSensor(
             coordinator,
             config_entry,
