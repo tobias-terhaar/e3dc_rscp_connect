@@ -1,0 +1,36 @@
+name: Release
+
+# HACS installs the integration from the zip attached to a release (zip_release
+# in hacs.json). GitHub counts the downloads of release assets, which is where
+# the download number shown in HACS comes from.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set the version in manifest.json from the release tag
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          jq --arg version "$version" '.version = $version' \
+            custom_components/e3dc_rscp_connect/manifest.json > manifest.tmp
+          mv manifest.tmp custom_components/e3dc_rscp_connect/manifest.json
+
+      - name: Build the zip
+        # HACS unpacks the zip into custom_components/e3dc_rscp_connect, so it
+        # holds the content of the integration folder, not the folder itself.
+        working-directory: custom_components/e3dc_rscp_connect
+        run: zip -r "$GITHUB_WORKSPACE/e3dc_rscp_connect.zip" . -x "*/__pycache__/*" "__pycache__/*"
+
+      - name: Attach the zip to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$GITHUB_REF_NAME" e3dc_rscp_connect.zip --clobber
