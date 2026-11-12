@@ -43,6 +43,9 @@ class E3dcRscpCoordinator(DataUpdateCoordinator):
             self.username,
         )
 
+        # device registry id of the storage, set once the entry is set up
+        self.storage_device_id: str | None = None
+
         self.__last_device_info_update: datetime | None = None
         self.__device_info_interval = timedelta(minutes=60)
 

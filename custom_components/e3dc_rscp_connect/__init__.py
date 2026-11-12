@@ -5,6 +5,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from . import const
 from .coordinator import E3dcRscpCoordinator
@@ -38,6 +39,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     # running with the credentials it was created with.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
+    # The wallboxes and power meters are linked to the storage by its device
+    # registry id, so the storage device has to exist before their entities are
+    # added - the platforms below are set up concurrently.
+    coordinator.storage_device_id = _async_register_storage_device(
+        hass, entry, coordinator
+    )
+
     # Speichere den Koordinator zentral
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "coordinator": coordinator,
@@ -51,6 +59,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     _LOGGER.debug("Setup done for entry id: %s", entry.entry_id)
     return True
+
+
+def _async_register_storage_device(
+    hass: HomeAssistant, entry: ConfigEntry, coordinator: E3dcRscpCoordinator
+) -> str:
+    "Registers the storage device and returns its device registry id."
+    storage = coordinator.storage
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        name=storage.serial,
+        manufacturer="E3/DC by HagerEnergy",
+        model="S10",
+        sw_version=storage.sw_version,
+    )
+    return device.id
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
