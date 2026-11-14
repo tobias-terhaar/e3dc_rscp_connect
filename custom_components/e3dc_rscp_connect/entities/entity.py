@@ -1,5 +1,6 @@
 """Implements the entity base class."""
 
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from ..const import DOMAIN  # noqa: TID252
@@ -34,6 +35,13 @@ POWER_METER_MODELS = {
     PowerMeterType.NO_CHARGE_METER: "Charge bypass meter",
 }
 
+# Newer Home Assistant releases link a device to its parent by the parent's
+# device registry id (via_device_id) and deprecate the identifier based
+# via_device, which stops working in 2027.8. Older releases, down to the oldest
+# one this integration supports, only know via_device.
+USE_VIA_DEVICE_ID = "via_device_id" in DeviceInfo.__annotations__
+
+
 class E3dcConnectEntity(CoordinatorEntity):
     """This entity holds the basic functions of all E3dcConnectEntities."""
 
@@ -62,7 +70,7 @@ class E3dcConnectEntity(CoordinatorEntity):
 
         Home Assistant puts the device name in front of every entity name, so
         it has to stay short. The storage it belongs to is expressed through
-        via_device instead of being spelled out here. A device name that
+        the via device link instead of being spelled out here. A device name that
         already says "wallbox" is taken as it is, to avoid a stutter like
         "Wallbox Wallbox 1".
         """
@@ -95,6 +103,17 @@ class E3dcConnectEntity(CoordinatorEntity):
             return POWER_METER_MODELS[pm_type]
         return f"Power meter (type {int(pm_type)})"
 
+    def _via_storage(self) -> dict:
+        """Links a sub device (wallbox, power meter) to the storage device.
+
+        Shows it below the storage in the device overview.
+        """
+        if not USE_VIA_DEVICE_ID:
+            return {"via_device": (DOMAIN, self._entry.entry_id)}
+        if self.coordinator.storage_device_id is None:
+            # the setup registers the storage first, so this is not expected
+            return {}
+        return {"via_device_id": self.coordinator.storage_device_id}
 
     @property
     def device_info(self):
@@ -115,7 +134,7 @@ class E3dcConnectEntity(CoordinatorEntity):
                 "name": pm_name,
                 "manufacturer": "E3/DC by HagerEnergy",
                 "model": pm_model,
-                "via_device": (DOMAIN, self._entry.entry_id),
+                **self._via_storage(),
             }
         if self._sub_device_type == "Wallbox":
             wb_info = self.coordinator.get_wallbox(self._sub_device_index)
@@ -130,7 +149,7 @@ class E3dcConnectEntity(CoordinatorEntity):
                 "sw_version": wb_info.firmware_version,
                 # Shows the wallbox below its storage in the device overview,
                 # which is what the old "connected to <serial>" name did.
-                "via_device": (DOMAIN, self._entry.entry_id),
+                **self._via_storage(),
             }
         return {
             "identifiers": {(DOMAIN, self._entry.entry_id)},

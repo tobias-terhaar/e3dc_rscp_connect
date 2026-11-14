@@ -19,6 +19,7 @@ from e3dc_rscp_connect.e3dc_rscp_api import (
     WallboxDataModel,
     WallboxType
 )
+from e3dc_rscp_connect.entities import entity as entity_module
 from e3dc_rscp_connect.entities.entity import E3dcConnectEntity
 from e3dc_rscp_connect.sensor import get_power_meter_sensors
 from e3dc_rscp_connect.entities import (
@@ -45,6 +46,7 @@ def _coordinator():
     coordinator = Mock()
     coordinator.data = {}
     coordinator.storage.serial = "S10-2023-001"
+    coordinator.storage_device_id = "storage-device-id"
     coordinator.get_wallbox.return_value = wallbox
     return coordinator
 
@@ -124,15 +126,25 @@ def test_wallbox_device_name(device_name, expected):
     assert E3dcConnectEntity.wallbox_device_name(device_name) == expected
 
 
+def _assert_linked_to_storage(info):
+    """The sub device is shown below the storage, the way this HA supports."""
+    if entity_module.USE_VIA_DEVICE_ID:
+        assert info["via_device_id"] == "storage-device-id"
+        assert "via_device" not in info
+    else:
+        assert info["via_device"] == (DOMAIN, "test_entry_id")
+        assert "via_device_id" not in info
+
+
 def test_wallbox_device_info_is_short_and_linked(mock_entry):
-    """The serial is no longer part of the name, via_device carries it."""
+    """The serial is no longer part of the name, the via device link carries it."""
     sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
 
     info = sensor.device_info
     # "Test Wallbox" already says wallbox, so it is not prefixed again
     assert info["name"] == "Test Wallbox"
     assert "S10-2023-001" not in info["name"]
-    assert info["via_device"] == (DOMAIN, "test_entry_id")
+    _assert_linked_to_storage(info)
 
 
 def test_storage_device_is_unchanged(mock_entry):
@@ -141,6 +153,37 @@ def test_storage_device_is_unchanged(mock_entry):
     info = sensor.device_info
     assert info["name"] == "S10-2023-001"
     assert "via_device" not in info
+    assert "via_device_id" not in info
+
+
+def test_link_uses_the_device_id_where_supported(mock_entry, monkeypatch):
+    """Newer Home Assistant releases deprecate via_device (issue #36)."""
+    monkeypatch.setattr(entity_module, "USE_VIA_DEVICE_ID", True)
+    sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
+
+    info = sensor.device_info
+    assert info["via_device_id"] == "storage-device-id"
+    assert "via_device" not in info
+
+
+def test_link_falls_back_to_identifiers_on_older_releases(mock_entry, monkeypatch):
+    """The oldest supported Home Assistant only knows via_device."""
+    monkeypatch.setattr(entity_module, "USE_VIA_DEVICE_ID", False)
+    sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
+
+    info = sensor.device_info
+    assert info["via_device"] == (DOMAIN, "test_entry_id")
+    assert "via_device_id" not in info
+
+
+def test_no_deprecated_link_without_a_storage_device_id(mock_entry, monkeypatch):
+    monkeypatch.setattr(entity_module, "USE_VIA_DEVICE_ID", True)
+    sensor = _build(WallboxPowerSensor, mock_entry, "current_power")
+    sensor.coordinator.storage_device_id = None
+
+    info = sensor.device_info
+    assert "via_device" not in info
+    assert "via_device_id" not in info
 
 
 # --- Wallbox device model --------------------------------------------------
@@ -198,7 +241,7 @@ def test_power_meter_is_a_device_below_the_storage(mock_entry):
     assert info["identifiers"] == {(DOMAIN, "test_entry_id_pm_2")}
     assert info["name"] == "Power meter - Index:2"
     assert info["model"] == "Grid meter"
-    assert info["via_device"] == (DOMAIN, "test_entry_id")
+    _assert_linked_to_storage(info)
 
 
 def test_power_meter_model_carries_the_device_name(mock_entry):

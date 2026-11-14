@@ -13,16 +13,24 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from e3dc_rscp_connect import async_reload_entry, async_setup_entry
+from e3dc_rscp_connect import (
+    _async_register_storage_device,
+    async_reload_entry,
+    async_setup_entry,
+)
 from e3dc_rscp_connect.coordinator import E3dcRscpCoordinator
 from e3dc_rscp_connect.e3dc_rscp_api import (
     E3dcAuthenticationError,
     E3dcConnectionError,
     E3dcIdentificationError,
     E3dcRscpError,
+    WallboxDataModel,
 )
+from e3dc_rscp_connect.entities import WallboxPowerSensor
 
 
 def make_hass():
@@ -31,8 +39,12 @@ def make_hass():
         coro.close()
         return Mock()
 
+    # The setup registers the storage device, so the mock needs a device registry.
+    registry = Mock()
+    registry.async_get_or_create.return_value = Mock(id="storage-device-id")
+
     hass = Mock()
-    hass.data = {}
+    hass.data = {dr.DATA_REGISTRY: registry}
     hass.async_create_task = Mock(side_effect=create_task)
     hass.config_entries.async_forward_entry_setups = AsyncMock()
     hass.config_entries.async_reload = AsyncMock()
@@ -57,6 +69,8 @@ def make_coordinator(connect_error=None):
     coordinator = Mock()
     coordinator.async_connect = AsyncMock(side_effect=connect_error)
     coordinator.async_config_entry_first_refresh = AsyncMock()
+    coordinator.storage.serial = "S10-123"
+    coordinator.storage.sw_version = "1.0"
     return coordinator
 
 
@@ -125,6 +139,51 @@ async def test_setup_listens_for_configuration_changes():
 
     entry.add_update_listener.assert_called_once_with(async_reload_entry)
     entry.async_on_unload.assert_called_once_with("unsubscribe")
+
+
+@pytest.mark.asyncio
+async def test_setup_registers_the_storage_device():
+    """Wallboxes and power meters are linked to it by its id (issue #36)."""
+    hass, entry = make_hass(), make_entry()
+    coordinator = make_coordinator()
+
+    with patch_coordinator(coordinator):
+        assert await async_setup_entry(hass, entry) is True
+
+    device_registry = hass.data[dr.DATA_REGISTRY]
+    device_registry.async_get_or_create.assert_called_once()
+    kwargs = device_registry.async_get_or_create.call_args.kwargs
+    assert kwargs["config_entry_id"] == "entry-1"
+    assert kwargs["identifiers"] == {("e3dc_rscp_connect", "entry-1")}
+    assert kwargs["name"] == "S10-123"
+    assert "via_device" not in kwargs
+    assert coordinator.storage_device_id == "storage-device-id"
+
+
+@pytest.mark.asyncio
+async def test_wallbox_is_linked_without_deprecation_warning(hass, caplog):
+    """Runs the device info through the real device registry (issue #36)."""
+    entry = MockConfigEntry(domain="e3dc_rscp_connect", entry_id="entry-1")
+    entry.add_to_hass(hass)
+    coordinator = make_coordinator()
+    wallbox = WallboxDataModel(index=0)
+    wallbox.device_name = "Garage"
+    coordinator.get_wallbox.return_value = wallbox
+
+    coordinator.storage_device_id = _async_register_storage_device(
+        hass, entry, coordinator
+    )
+    sensor = WallboxPowerSensor(
+        coordinator, entry, "current_power", data_getter=lambda: 0, index=0
+    )
+
+    registry = dr.async_get(hass)
+    wallbox = registry.async_get_or_create(
+        config_entry_id=entry.entry_id, **sensor.device_info
+    )
+
+    assert wallbox.via_device_id == coordinator.storage_device_id
+    assert "deprecated" not in caplog.text
 
 
 @pytest.mark.asyncio
