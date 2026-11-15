@@ -114,6 +114,12 @@
       "additional_production_energy": {
         "name": "Extra opwekkers energie"
       },
+      "additional_consumption_power": {
+        "name": "Extra verbruikers vermogen"
+      },
+      "additional_consumption_energy": {
+        "name": "Extra verbruikers energie"
+      },
       "total_production_power": {
         "name": "Totale opwekking vermogen"
       },
