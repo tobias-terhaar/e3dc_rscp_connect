@@ -114,6 +114,12 @@
       "additional_production_energy": {
         "name": "Additional generators energy"
       },
+      "additional_consumption_power": {
+        "name": "Additional consumers power"
+      },
+      "additional_consumption_energy": {
+        "name": "Additional consumers energy"
+      },
       "total_production_power": {
         "name": "Total production power"
       },

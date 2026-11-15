@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- **`Additional consumers power` and `Additional consumers energy` sensors on the storage.**
+  They sum every power meter with the role *additional consumption* (for example a heat
+  pump measured by an extra CT clamp, shown as "Zusatzverbrauch" in the E3/DC portal).
+  The power meter devices added in 1.1.4 only report power in watts, which the energy
+  dashboard does not offer as an individual device; the energy sensor integrates that
+  power so the consumer can be added under *Settings → Dashboards → Energy → Individual
+  devices*. Systems without such a meter keep both sensors *unknown*.
+
 ## 1.1.2
 
 ### Changed

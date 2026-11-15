@@ -114,6 +114,12 @@
       "additional_production_energy": {
         "name": "Zusätzliche Erzeuger Energie"
       },
+      "additional_consumption_power": {
+        "name": "Zusätzliche Verbraucher Leistung"
+      },
+      "additional_consumption_energy": {
+        "name": "Zusätzliche Verbraucher Energie"
+      },
       "total_production_power": {
         "name": "Gesamterzeugung Leistung"
       },

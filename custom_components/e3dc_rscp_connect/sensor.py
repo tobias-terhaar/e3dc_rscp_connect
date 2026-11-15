@@ -26,7 +26,7 @@ from .entities import (
     WallboxPowerSensor,
     WallboxSessionEnergySensor,
 )
-from .e3dc_rscp_api import DeviceState
+from .e3dc_rscp_api import DeviceState, PowerMeterType
 
 DOMAIN = const.DOMAIN
 _LOGGER = logging.getLogger(__name__)
@@ -40,6 +40,27 @@ def get_total_production_power(coordinator: E3dcRscpCoordinator):
     """
     powers = coordinator.storage.powers
     values = [value for value in (powers.pv, powers.additional) if value is not None]
+    if not values:
+        return None
+    return sum(values)
+
+
+def get_additional_consumption_power(coordinator: E3dcRscpCoordinator):
+    """Sum of the power of every "additional consumption" power meter.
+
+    These are the meters the E3/DC portal shows as separate consumers (for
+    example a heat pump measured by an extra CT clamp, "Zusatzverbrauch").
+    They are unrelated to the additional generators.
+
+    Returns None until at least one such meter has reported its power, so
+    systems without one keep the sensors unknown instead of reporting 0.
+    """
+    values = [
+        powermeter.power
+        for powermeter in coordinator.powermeters
+        if powermeter.pm_type == PowerMeterType.ADDITIONAL_CONSUMPTION
+        and powermeter.power is not None
+    ]
     if not values:
         return None
     return sum(values)
@@ -174,6 +195,22 @@ async def async_setup_entry(
             config_entry,
             "additional_production_energy",
             data_getter=lambda: coordinator.storage.powers.additional,
+        ),
+        #
+        # Additional consumers: the summed power of all "additional consumption"
+        # power meters, plus its energy, so they can be used as an individual
+        # device in the energy dashboard.
+        PowerSensor(
+            coordinator,
+            config_entry,
+            "additional_consumption_power",
+            data_getter=lambda: get_additional_consumption_power(coordinator),
+        ),
+        EnergySensor(
+            coordinator,
+            config_entry,
+            "additional_consumption_energy",
+            data_getter=lambda: get_additional_consumption_power(coordinator),
         ),
         #
         # Combined production of the internal inverter and the additional generators
